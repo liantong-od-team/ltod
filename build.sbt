@@ -28,3 +28,10 @@ libraryDependencies ++= Seq(
 //resolvers +="internal" at "http://10.31.2.234:8081/nexus/content/groups/public/"
 
 resolvers +="cloudera" at "https://repository.cloudera.com/artifactory/cloudera-repos/"
+
+mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
+{
+  case PathList("META-INF", "spring.tooling") => MergeStrategy.first
+  case x => old(x)
+}
+}
