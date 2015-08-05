@@ -22,7 +22,8 @@ libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-common" % "2.5.0-cdh5.3.0" % "provided",
   "org.apache.hadoop" % "hadoop-client" % "2.5.0-mr1-cdh5.3.0" % "provided",
   "org.springframework" % "spring-jdbc" % "3.2.13.RELEASE",
-  "com.alibaba" % "druid" % "1.0.12"
+  "com.alibaba" % "druid" % "1.0.12",
+  "com.google.guava" % "guava" % "18.0"
 )
 
 //resolvers +="internal" at "http://10.31.2.234:8081/nexus/content/groups/public/"

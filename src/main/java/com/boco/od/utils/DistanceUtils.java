@@ -36,6 +36,14 @@ public class DistanceUtils {
         return d * Math.PI / 180.0;
     }
 
+    /**
+     *
+     * @param slat1 起点纬度
+     * @param slng1 起点经度
+     * @param slat2 终点纬度
+     * @param slng2 终点经度
+     * @return 两地间距离，单位为千米
+     */
     public static double getDistance(String slat1, String slng1, String slat2, String slng2)
     {
         double lng1 = Double.valueOf(slng1);
