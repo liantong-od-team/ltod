@@ -1,21 +1,23 @@
 package com.boco.od.ods;
 
 import com.boco.od.common.*;
-
 import com.boco.od.utils.DateUtils;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
  * Created by ranhualin on 2015/7/30.
  */
-public class CellOdTraceMapper  extends Mapper<LongWritable, Text, OdTracePair, OdTraceRecord>{
+public class CellOdTraceMapper extends Mapper<LongWritable, Text, OdTracePair, OdTraceRecord>{
 
-    private static Metadata meta= new Metadata(Constants.STAGE_PROP_PATH);
+    private Metadata meta;
+    private Map<String, String[]> cellMap;
+    private Map<String, DimensionLrc> lrcMap;
 
     private int AREA_ID_INDEX;
     private int TICKET_TYPE_INDEX;
@@ -48,6 +50,8 @@ public class CellOdTraceMapper  extends Mapper<LongWritable, Text, OdTracePair, 
 
     @Override
     protected void setup(Context context) {
+
+        meta= new Metadata(Constants.STAGE_PROP_PATH);
         AREA_ID_INDEX = meta.getIntValue("AREA_ID");
         TICKET_TYPE_INDEX = meta.getIntValue("TICKET_TYPE");
         CALL_NUMBER_INDEX = meta.getIntValue("CALL_NUMBER");
@@ -59,6 +63,20 @@ public class CellOdTraceMapper  extends Mapper<LongWritable, Text, OdTracePair, 
         columnSize = meta.getIntValue("column.size");
         delimiterIn = meta.getValue("delimiterIn");
         pattern = Pattern.compile(delimiterIn);
+
+        DimensionReader reader = new DimensionReader(context.getConfiguration());
+        cellMap = reader.getCellMap();
+        lrcMap = reader.getLrcMap();
+
+//        cellMap  = new HashMap<String, String[]>();
+//        lrcMap = new HashMap<String, DimensionLrc>();
+        context.getCounter("RELATIONS","CELL_DIM_SUCC").increment(reader.getCell_succ());
+        context.getCounter("RELATIONS","CELL_DIM_ERROR").increment(reader.getCell_error());
+        context.getCounter("RELATIONS","LRC_DIM_SUCC").increment(reader.getLrc_succ());
+        context.getCounter("RELATIONS","LRC_DIM_ERROR").increment(reader.getLrc_error());
+        context.getCounter("RELATIONS","ERROR_FILE").increment(reader.getFile_error());
+        context.getCounter("RELATIONS","CELL_DIM").increment(cellMap.size());
+        context.getCounter("RELATIONS","LRC_DIM").increment(lrcMap.size());
     }
 
     @Override
@@ -85,9 +103,9 @@ public class CellOdTraceMapper  extends Mapper<LongWritable, Text, OdTracePair, 
         if(time<0){
             context.getCounter(COUNTER.ErrorDate).increment(1);
             return;
-        }
+    }
 
-//逻辑需确定？
+//         逻辑需确定？
 //        "00：主叫呼出话单
 //        01：被叫呼入话单
 //        02：呼叫前转话单
@@ -101,32 +119,30 @@ public class CellOdTraceMapper  extends Mapper<LongWritable, Text, OdTracePair, 
 //        20：国际漫游语音附加业务
 //        EE：尾记录（后续系统可不用处理）
 //        FF：未定义业务话单"
-        if("00".equals(TICKET_TYPE_VAL)||"10".equals(TICKET_TYPE_VAL)
-                ||"12".equals(TICKET_TYPE_VAL)||"18".equals(TICKET_TYPE_VAL)){
+        if("00".equals(TICKET_TYPE_VAL)||"10".equals(TICKET_TYPE_VAL)){
             msisdn = CALL_NUMBER_VAL;
-        }else{
+        }else if("01".equals(TICKET_TYPE_VAL)||"11".equals(TICKET_TYPE_VAL)){
             msisdn = CALLED_NUMBER_VAL;
+        }else{
+            msisdn=null;
         }
         //号码为空
-        if(msisdn==null||"".equals(msisdn.trim())){
+        if(msisdn==null||"".equals(msisdn.trim())||msisdn.trim().length()<7){
             context.getCounter(COUNTER.Null).increment(1);
             return;
         }
+        if(CELL_ID_VAL==null||"".equals(CELL_ID_VAL.trim())){
+            context.getCounter(COUNTER.Null).increment(1);
+            return;
+        }
+        if(LAC_VAL==null||"".equals(LAC_VAL.trim())){
+            context.getCounter(COUNTER.Null).increment(1);
+            return;
+        }
+        CELL_ID_VAL = CELL_ID_VAL.trim();
+        LAC_VAL = LAC_VAL.trim();
+        msisdn = msisdn.trim();
         rskey.set(msisdn,time);
-
-//        private String msisdn;
-//        private long time;
-//        private String cellId;
-//        private String lac;
-//        private double longitude;
-//        private double latitude;
-//        private String cell_province;
-//        private String cell_city;
-//        private String cell_county;
-//        private String area_id;
-//        private String lrc_province;
-//        private String lrc_city;
-//        private String lrc_county;
         rsval.setDateDay(BEGIN_TIME_VAL.substring(0,8));
 //        rsval.setMsisdn(msisdn);
         rsval.setTime(time);
@@ -134,19 +150,37 @@ public class CellOdTraceMapper  extends Mapper<LongWritable, Text, OdTracePair, 
         rsval.setLac(LAC_VAL);
         rsval.setArea_id(AREA_ID_VAL);
         //关联经纬度
-        //TODO
-        rsval.setLongitude(0);
-        rsval.setLatitude(0);
-        //关联地理位置
-        //TODO
-        rsval.setCell_province("cell_province");
-        rsval.setCell_city("cell_city");
-        rsval.setCell_county("cell_country");
+        String lac_ci = LAC_VAL+"-"+CELL_ID_VAL;
+        if(cellMap.containsKey(lac_ci)) {
+            String[] dim = cellMap.get(lac_ci);
+            rsval.setLongitude(dim[0]);
+            rsval.setLatitude(dim[1]);
+            rsval.setCell_province(dim[2]);
+            rsval.setCell_city(dim[3]);
+            rsval.setCell_county(dim[4]);
+
+            context.getCounter("RELATIONS","CELL_SUCC").increment(1);
+        }else{
+            rsval.setLongitude("");
+            rsval.setLatitude("");
+            rsval.setCell_province("");
+            rsval.setCell_city("");
+            rsval.setCell_county("");
+            context.getCounter("RELATIONS","CELL_FAIL").increment(1);
+        }
+        String tac = msisdn.substring(0,7);
         //关联归属地
-        //TODO
-        rsval.setLrc_province("lrc_province");
-        rsval.setLrc_city("lrc_city");
-        rsval.setLrc_county("lrc_country");
+        if(lrcMap.containsKey(tac)) {
+            DimensionLrc dim = lrcMap.get(tac);
+            rsval.setLrc_province(dim.getProvince());
+            rsval.setLrc_city(dim.getCity());
+            context.getCounter("RELATIONS","LRC_SUCC").increment(1);
+        }else{
+            rsval.setLrc_province("");
+            rsval.setLrc_city("");
+            context.getCounter("RELATIONS","LRC_FAIL").increment(1);
+        }
+
         try {
             context.write(rskey,rsval);
             context.getCounter(COUNTER.MapperOutput).increment(1);
@@ -156,5 +190,7 @@ public class CellOdTraceMapper  extends Mapper<LongWritable, Text, OdTracePair, 
     }
     protected void cleanup(Context context) throws IOException,
             InterruptedException {
+        cellMap=null;
+        lrcMap=null;
     }
 }

@@ -17,18 +17,14 @@ public class OdTraceRecord implements Writable,Cloneable {
     private long time;
     private String cellId;
     private String lac;
-    private double longitude;
-    private double latitude;
+    private String longitude;
+    private String latitude;
     private String cell_province;
     private String cell_city;
     private String cell_county;
     private String area_id;
     private String lrc_province;
     private String lrc_city;
-    private String lrc_county;
-
-    public void set() {
-    }
 
     @Override
     public void readFields(DataInput in) throws IOException {
@@ -37,15 +33,14 @@ public class OdTraceRecord implements Writable,Cloneable {
         time = in.readLong();
         cellId= in.readUTF();
         lac= in.readUTF();
-        longitude=in.readDouble();
-        latitude=in.readDouble();
+        longitude=in.readUTF();
+        latitude=in.readUTF();
         cell_province= in.readUTF();
         cell_city= in.readUTF();
         cell_county= in.readUTF();
         area_id= in.readUTF();
         lrc_province= in.readUTF();
         lrc_city= in.readUTF();
-        lrc_county= in.readUTF();
     }
     @Override
     public void write(DataOutput out) throws IOException {
@@ -54,15 +49,14 @@ public class OdTraceRecord implements Writable,Cloneable {
         out.writeLong(time);
         out.writeUTF(cellId);
         out.writeUTF(lac);
-        out.writeDouble(longitude);
-        out.writeDouble(latitude);
+        out.writeUTF(longitude);
+        out.writeUTF(latitude);
         out.writeUTF(cell_province);
         out.writeUTF(cell_city);
         out.writeUTF(cell_county);
         out.writeUTF(area_id);
         out.writeUTF(lrc_province);
         out.writeUTF(lrc_city);
-        out.writeUTF(lrc_county);
     }
     @Override
     protected Object clone() throws CloneNotSupportedException {
@@ -100,19 +94,19 @@ public class OdTraceRecord implements Writable,Cloneable {
         this.lac = lac;
     }
 
-    public double getLongitude() {
+    public String getLongitude() {
         return longitude;
     }
 
-    public void setLongitude(double longitude) {
+    public void setLongitude(String longitude) {
         this.longitude = longitude;
     }
 
-    public double getLatitude() {
+    public String getLatitude() {
         return latitude;
     }
 
-    public void setLatitude(double latitude) {
+    public void setLatitude(String latitude) {
         this.latitude = latitude;
     }
 
@@ -162,14 +156,6 @@ public class OdTraceRecord implements Writable,Cloneable {
 
     public void setLrc_city(String lrc_city) {
         this.lrc_city = lrc_city;
-    }
-
-    public String getLrc_county() {
-        return lrc_county;
-    }
-
-    public void setLrc_county(String lrc_county) {
-        this.lrc_county = lrc_county;
     }
 
     public String getDateDay() {

@@ -113,25 +113,22 @@ public class CellOdTraceReducer extends Reducer<OdTracePair, OdTraceRecord, Null
 
     //每个号码的第一条记录不是当天的"00"秒时，需要补上开头
     private OdTraceRecord getDayFirstRecord(OdTraceRecord record) {
-        OdTraceRecord newRecord = record;
-        newRecord = cloneRecord(record);
+        OdTraceRecord newRecord = cloneRecord(record);
         newRecord.setTime(DateUtils.convertString2Time(record.getDateDay() + "000000"));
         return newRecord;
     }
 
     //跨天时,结尾取23:59计算
     private OdTraceRecord getDayLastRecord(OdTraceRecord record) {
-        OdTraceRecord newRecord = record;
-        newRecord = cloneRecord(record);
+        OdTraceRecord newRecord = cloneRecord(record);
         newRecord.setTime(DateUtils.convertString2Time(record.getDateDay() + "235959"));
         return newRecord;
     }
 
     //跨天时,第二天头一条开头取00:00,
     private OdTraceRecord getNextDayFirstRecord(OdTraceRecord record) {
-        OdTraceRecord newRecord = record;
         String nextDay = DateUtils.getNextDay(record.getTime());
-        newRecord = cloneRecord(record);
+        OdTraceRecord newRecord = cloneRecord(record);
         newRecord.setDateDay(nextDay);
         newRecord.setTime(DateUtils.convertString2Time(nextDay + "000000"));
         return newRecord;
@@ -160,11 +157,7 @@ public class CellOdTraceReducer extends Reducer<OdTracePair, OdTraceRecord, Null
         sb.append(curr.getCell_county()).append(delimiterOut);
         sb.append(last.getArea_id()).append(delimiterOut);
         sb.append(last.getLrc_province()).append(delimiterOut);
-        sb.append(last.getLrc_city()).append(delimiterOut);
-        sb.append(last.getLrc_county()).append(delimiterOut);
-        sb.append(curr.getLrc_province()).append(delimiterOut);
-        sb.append(curr.getLrc_city()).append(delimiterOut);
-        sb.append(curr.getLrc_county());
+        sb.append(last.getLrc_city());
         return sb.toString();
     }
 }
