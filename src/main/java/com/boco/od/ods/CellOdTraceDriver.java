@@ -34,7 +34,7 @@ public class CellOdTraceDriver extends Configured implements Tool {
     public int run(String[] args) throws Exception {
         if (args.length < 4) {
             System.out.printf(
-                    "Usage: %s [generic options]<input dir> <output dir> <cell dir> <lrc dir>\n",
+                    "Usage: %s [generic options]<input dir> <output dir> <cell dir> <lrc dir> [cell_fileName] [lrc_fileName]\n",
                     getClass().getSimpleName());
             ToolRunner.printGenericCommandUsage(System.out);
             return -1;
@@ -46,11 +46,11 @@ public class CellOdTraceDriver extends Configured implements Tool {
 
         Configuration conf=getConf();
 //       conf.set("hadoop.tmp.dir", "D:\\odtest\\tmp\\");
-        if(args.length>5){
-            initRelationConf(cellpath,numberpath,conf,args[4]);//加载缓存数据
-        }else{
-            initRelationConf(cellpath,numberpath,conf,null);//加载缓存数据
+        if(args.length>5) {
+            conf.set("cell_fileName", args[4]);
+            conf.set("lrc_fileName", args[5]);
         }
+        initRelationConf(cellpath,numberpath,conf);//加载缓存数据
         Job job = new Job(conf);
 
 //        println(conf);
@@ -90,38 +90,33 @@ public class CellOdTraceDriver extends Configured implements Tool {
             e.printStackTrace();
         }
     }
-    private void initRelationConf(String cellpath,String numberpath, Configuration conf,String hdfs) throws URISyntaxException, IOException {
+    private void initRelationConf(String cellpath,String numberpath, Configuration conf) throws URISyntaxException, IOException {
 //        DistributedCache.createSymlink(conf);
-        disCache(cellpath, conf,hdfs);//为该job添加缓存文件
-        disCache(numberpath, conf,hdfs);//为该job添加缓存文件
-        URI[] distributePaths = DistributedCache.getCacheFiles(conf);
-        System.out.println("#distributePaths#" + distributePaths);
-        String info = null;
-        for (URI  uri: distributePaths) {
-            System.out.println("#URI#" + uri.getPath());
-        }
-        Path[] dpaths = DistributedCache.getLocalCacheFiles(conf);
-        System.out.println("#Local#" + dpaths);
-        if(dpaths!=null){
-            System.out.println("#Local#" + dpaths.length);
-            for (Path  p: dpaths) {
-                System.out.println("#Local#" + p.toString());
-            }
-        }
-
+        disCache(cellpath, conf);//为该job添加缓存文件
+        disCache(numberpath, conf);//为该job添加缓存文件
+//        URI[] distributePaths = DistributedCache.getCacheFiles(conf);
+//        System.out.println("#distributePaths#" + distributePaths);
+//        String info = null;
+//        for (URI  uri: distributePaths) {
+//            System.out.println("#URI#" + uri.getPath());
+//        }
+//        Path[] dpaths = DistributedCache.getLocalCacheFiles(conf);
+//        System.out.println("#Local#" + dpaths);
+//        if(dpaths!=null){
+//            System.out.println("#Local#" + dpaths.length);
+//            for (Path  p: dpaths) {
+//                System.out.println("#Local#" + p.toString());
+//            }
+//        }
     }
-    public static void disCache(String dimDir, Configuration conf,String hdfs) throws IOException {
+    public static void disCache(String dimDir, Configuration conf) throws IOException {
         FileSystem fs = null;
-        if(hdfs!=null){
-            fs=  FileSystem.get(URI.create(hdfs), conf);
-        }else{
-            fs=  FileSystem.get(conf);
-        }
+        fs=  FileSystem.get(conf);
 
         FileStatus[] fileDir = fs.listStatus(new Path(dimDir));
         for (FileStatus file : fileDir) {
             if(file.isDirectory()){
-                disCache(file.getPath().toString(),conf,hdfs);
+                disCache(file.getPath().toString(),conf);
             }else {
                 DistributedCache.addCacheFile(URI.create(file.getPath().toString()), conf);
             }
