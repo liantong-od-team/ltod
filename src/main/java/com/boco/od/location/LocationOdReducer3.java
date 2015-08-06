@@ -33,7 +33,7 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
     String area_id = "";
     String lrc_province = "";
     String lrc_city = "";
-    String lrc_county = "";
+//    String lrc_county = "";
 
     // prev node
     String prevDay = "";
@@ -44,9 +44,9 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
     String prevArea_id = "";
     String prevLrc_province = "";
     String prevLrc_city = "";
-    String prevLrc_county = "";
+//    String prevLrc_county = "";
 
-    int[] od_cityColIdx_in_RegionColIdx = {0, 1, 2, 3, 4, 5, 6, 8, 9, 11, 12, 13, 14};
+    int[] od_cityColIdx_in_RegionColIdx = {0, 1, 2, 3, 4, 5, 6, 8, 9, 11, 12, 13, 14, 15, 16};
 
     /**
      * 需要补点数据的时间部分，起始补000000,结束补 235959
@@ -55,20 +55,36 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
     static String day_end_time = "235959";
     private static int level;
     // dto
-    String[] record = new String[18];
-
+    String[] record = new String[17];
+    StringBuffer sb = new StringBuffer();
     protected void setup(Context ctx) throws InterruptedException,
             IOException {
         //city=1 region=2
         level = ctx.getConfiguration().get("level").equalsIgnoreCase("city") ? 1 : 2;
-        System.out.println("level="+level);
+        System.out.println("level=" + level);
     }
 
     public void reduce(UserTimePair key, Iterable<Text> values, Context ctx) throws IOException, InterruptedException {
 
         System.out.println(" reduce output...");
+        this.resetEnv4User();
         this.travals(level, key, values, ctx);
     }
+
+    /**
+     * init prev param for per user
+     */
+    private void resetEnv4User(){
+         prevDay = "";
+         prevStart_date = "";
+         prevStart_cell_province = "";
+         prevStart_cell_city = "";
+         prevStart_cell_county = "";
+         prevArea_id = "";
+         prevLrc_province = "";
+         prevLrc_city = "";
+    }
+
 
     /**
      * @param level
@@ -76,7 +92,7 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
     private void travals(int level, UserTimePair key, Iterable<Text> values, Context ctx) throws IOException, InterruptedException {
 
         for (Text val : values) {
-            // 0-22 strings
+            // 0-21 strings
             vArr = pattern.split(val.toString());
 
             date_day = vArr[0];
@@ -93,7 +109,7 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
             area_id = vArr[19];
             lrc_province = vArr[20];
             lrc_city = vArr[21];
-            lrc_county = vArr[22];
+//            lrc_county = vArr[22];
 
             //第一条数据
             if ("".equals(prevDay)) {
@@ -159,10 +175,11 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
         record[11] = area_id; /*归属地区号*/
         record[12] = lrc_province; /*归属地-省*/
         record[13] = lrc_city; /*归属地-市*/
-        record[14] = lrc_county; /*归属地-区县*/
-        record[15] = ""; /*高铁概率*/
-        record[16] = ""; /*高速概率*/
-        record[17] = ""; /*普通公路概率*/
+//        record[14] = lrc_county; /*归属地-区县*/
+        record[14] = ""; /*高铁概率*/
+        record[15] = ""; /*高速概率*/
+        record[16] = ""; /*普通公路概率*/
+
         try {
             this.writeRecord(desc, record, level, ctx);
         } catch (IOException e) {
@@ -208,10 +225,11 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
                 record[11] = area_id; /*归属地区号*/
                 record[12] = lrc_province; /*归属地-省*/
                 record[13] = lrc_city; /*归属地-市*/
-                record[14] = lrc_county; /*归属地-区县*/
-                record[15] = ""; /*高铁概率*/
-                record[16] = ""; /*高速概率*/
-                record[17] = ""; /*普通公路概率*/
+//                record[14] = lrc_county; /*归属地-区县*/
+                record[14] = ""; /*高铁概率*/
+                record[15] = ""; /*高速概率*/
+                record[16] = ""; /*普通公路概率*/
+
                 try {
                     this.writeRecord(desc, record, level, ctx);
                 } catch (IOException e) {
@@ -235,19 +253,17 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
                 record[11] = area_id; /*归属地区号*/
                 record[12] = lrc_province; /*归属地-省*/
                 record[13] = lrc_city; /*归属地-市*/
-                record[14] = lrc_county; /*归属地-区县*/
-                record[15] = ""; /*高铁概率*/
-                record[16] = ""; /*高速概率*/
-                record[17] = ""; /*普通公路概率*/
+//                record[14] = lrc_county; /*归属地-区县*/
+                record[14] = ""; /*高铁概率*/
+                record[15] = ""; /*高速概率*/
+                record[16] = ""; /*普通公路概率*/
                 try {
                     this.writeRecord(desc, record, level, ctx);
                 } catch (IOException e) {
                     e.printStackTrace();
-
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-
             } else {
 
                 // 错误参数
@@ -272,15 +288,15 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
                 record[11] = area_id; /*归属地区号*/
                 record[12] = lrc_province; /*归属地-省*/
                 record[13] = lrc_city; /*归属地-市*/
-                record[14] = lrc_county; /*归属地-区县*/
-                record[15] = ""; /*高铁概率*/
-                record[16] = ""; /*高速概率*/
-                record[17] = ""; /*普通公路概率*/
+//                record[14] = lrc_county; /*归属地-区县*/
+                record[14] = ""; /*高铁概率*/
+                record[15] = ""; /*高速概率*/
+                record[16] = ""; /*普通公路概率*/
+
                 try {
                     this.writeRecord(desc, record, level, ctx);
                 } catch (IOException e) {
                     e.printStackTrace();
-
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -311,7 +327,7 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
             prevArea_id = area_id;
             prevLrc_province = lrc_province;
             prevLrc_city = lrc_city;
-            prevLrc_county = lrc_county;
+//            prevLrc_county = lrc_county;
         }
 
     }
@@ -325,11 +341,12 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
      */
     private void writeRecord(String desc, String[] record, int level, Context ctx) throws IOException, InterruptedException {
         System.out.println(desc);
-        StringBuffer sb = new StringBuffer();
+//        StringBuffer sb = new StringBuffer();
+        sb.setLength(0);
         if (level == 1) {
             // city
             for (int idx = 0; idx < od_cityColIdx_in_RegionColIdx.length; idx++) {
-                if (idx != record.length - 1) {
+                if (idx != od_cityColIdx_in_RegionColIdx.length - 1) {
                     sb.append(record[od_cityColIdx_in_RegionColIdx[idx]]).append(outputSep);
                 } else {
                     sb.append(record[od_cityColIdx_in_RegionColIdx[idx]]);

@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
  */
 public class LocationOdMapper extends Mapper<LongWritable, Text, UserTimePair, Text> {
     private static Pattern pattern = Pattern.compile(",");
-    private final int COLSIZE = 23;
+    private final int COLSIZE = 22;
     private static String charset = "utf-8";
 
     String msisdn;
