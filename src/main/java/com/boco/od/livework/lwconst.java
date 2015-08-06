@@ -8,4 +8,5 @@ public class lwconst {
     public static final String REDIS_PROP_PATH="/redis_meta_data.properties";
     public static final String CELL_PROP_PATH="/CELL.properties";
     public static final String LRC_PROP_PATH="/LRC.properties";
+    public static final int dayNum=0;
 }

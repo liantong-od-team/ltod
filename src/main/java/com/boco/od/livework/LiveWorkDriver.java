@@ -32,6 +32,8 @@ public class LiveWorkDriver  extends Configured implements Tool {
     private Metadata cellMeta;
     private Metadata lrcMeta;
 
+
+    public int dayNum=0;
     @Override
     public int run(String[] args) throws Exception {
         if (args.length != 4) {
@@ -39,22 +41,29 @@ public class LiveWorkDriver  extends Configured implements Tool {
                     "Usage: %s [generic options]<input dir> <output dir> <cell dir> <lrc dir>\n",
                     getClass().getSimpleName());
             ToolRunner.printGenericCommandUsage(System.out);
-            return -1;
+          //  return -1;
+        }
+        System.out.printf("args.length="+args.length);
+        for(int i=0;i<args.length;i++)
+        {
+            System.out.printf("I="+i+"args:"+args[i]);
+
         }
         String inpath = args[0];
         String outpath = args[1];
-        String cellpath = args[2];
-        String numberpath=args[3];
+        dayNum = Integer.parseInt(args[2]);
+        //String cellpath = args[2];
+       // String numberpath=args[3];
 
         Configuration conf=getConf();
 //       conf.set("hadoop.tmp.dir", "D:\\odtest\\tmp\\");
 
-        //initRelationConf(cellpath,numberpath,conf);//加载缓存数据
+
         Job job = new Job(conf);
         println(conf);
         job.setJarByClass(LiveWorkDriver.class);
 
-        job.setJobName("15day");
+        job.setJobName("LiveWork");
         job.setMapperClass(LiveWorkMapper.class);
         job.setReducerClass(LiveWorkReducer.class);
 
