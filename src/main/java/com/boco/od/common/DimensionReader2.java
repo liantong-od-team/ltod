@@ -18,7 +18,7 @@ import java.util.Map;
 /**
  * Created by ranhualin on 2015/8/3.
  */
-public class DimensionReaderNew implements Serializable {
+public class DimensionReader2 implements Serializable {
 
     private Map<String, String[]> cellMap;
     private Map<String, String[]> lrcMap;
@@ -52,7 +52,7 @@ public class DimensionReaderNew implements Serializable {
 
     private List<String> errorFile=new ArrayList<String>();
 
-    public DimensionReaderNew(Configuration conf) {
+    public DimensionReader2(Configuration conf) {
         this.conf = conf;
         Metadata cellMeta = new Metadata(Constants.CELL_PROP_PATH);
         cell_fileName= conf.get("cell_fileName",cellMeta.getValue("fileName"));
@@ -110,7 +110,7 @@ public class DimensionReaderNew implements Serializable {
                         if (parts.length >= cell_columnSize) {
                             String country = "";
                             try {
-//                                country = DsFactory.getinstance().queryCountry(parts[CELL_INDEX_LONGITUDE], parts[CELL_INDEX_LATITUDE]);
+                                country = DsFactory.getinstance().queryCountry(parts[CELL_INDEX_LONGITUDE], parts[CELL_INDEX_LATITUDE]);
                             } catch (Exception e) {
                             }
                             cellMap.put(parts[CELL_INDEX_LAC] + "-" + parts[CELL_INDEX_CELL_ID],

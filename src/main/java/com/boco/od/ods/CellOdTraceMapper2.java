@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 /**
  * Created by ranhualin on 2015/7/30.
  */
-public class CellOdTraceMapper1 extends Mapper<LongWritable, Text, OdTracePair, OdTraceRecord>{
+public class CellOdTraceMapper2 extends Mapper<LongWritable, Text, OdTracePair, OdTraceRecord>{
 
     private Metadata meta;
     private Map<String, String[]> cellMap;
@@ -46,7 +46,7 @@ public class CellOdTraceMapper1 extends Mapper<LongWritable, Text, OdTracePair, 
     private String msisdn;
     private long time;
 
-    public CellOdTraceMapper1() {
+    public CellOdTraceMapper2() {
     }
 
     @Override
@@ -65,7 +65,7 @@ public class CellOdTraceMapper1 extends Mapper<LongWritable, Text, OdTracePair, 
         delimiterIn = meta.getValue("delimiterIn");
         pattern = Pattern.compile(delimiterIn);
 
-        DimensionReaderNew reader = new DimensionReaderNew(context.getConfiguration());
+        DimensionReader2 reader = new DimensionReader2(context.getConfiguration());
         cellMap = reader.getCellMap();
         lrcMap = reader.getLrcMap();
 
