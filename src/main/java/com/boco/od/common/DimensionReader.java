@@ -10,7 +10,9 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,7 +21,7 @@ import java.util.Map;
 public class DimensionReader implements Serializable {
 
     private Map<String, String[]> cellMap;
-    private Map<String, DimensionLrc> lrcMap;
+    private Map<String, String[]> lrcMap;
     private Configuration conf;
 
     private String cell_fileName;
@@ -44,9 +46,12 @@ public class DimensionReader implements Serializable {
 //    private int LRC_INDEX_DAY;
     private int cell_succ;
     private int cell_error;
+    private int cell_other;
     private int lrc_succ;
     private int lrc_error;
     private int file_error;
+
+    private List<String> errorFile=new ArrayList<String>();
 
     public DimensionReader(Configuration conf) {
         this.conf = conf;
@@ -80,7 +85,7 @@ public class DimensionReader implements Serializable {
         return cellMap;
     }
 
-    public Map<String, DimensionLrc> getLrcMap() {
+    public Map<String, String[]> getLrcMap() {
         if (lrcMap == null) {
             init();
         }
@@ -89,47 +94,45 @@ public class DimensionReader implements Serializable {
 
     private void init() {
         cellMap = new HashMap<String, String[]>();
-        lrcMap = new HashMap<String, DimensionLrc>();
+        lrcMap = new HashMap<String, String[]>();
         BufferedReader br = null;
         //获得当前作业的DistributedCache相关文件
         try {
-           Path[] distributePaths = DistributedCache.getLocalCacheFiles(conf);
+            Path[] distributePaths = DistributedCache.getLocalCacheFiles(conf);
 //            System.out.println("#distributePaths#" + distributePaths);
             String info = null;
             for (Path  p: distributePaths) {
-                System.out.println("#p#" + p.toString());
-                if (p.toString().toLowerCase().contains(cell_fileName.toLowerCase())) {
-                    System.out.println("#p1#" + p.toString());
+                System.out.println("#p==#" + p.toString());
+                if (p.toUri().getPath().toLowerCase().contains(cell_fileName.toLowerCase())) {
                     //读缓存文件，并放到mem中
                     br = new BufferedReader(new FileReader(p.toString()));
                     while (null != (info = br.readLine())) {
                         String[] parts = info.split(cell_delimiterIn, -1);
                         if (parts.length >= cell_columnSize) {
                             String country = "";
-                            try {
-                                country = DsFactory.getinstance().queryCountry(parts[CELL_INDEX_LONGITUDE], parts[CELL_INDEX_LATITUDE]);
-                            } catch (Exception e) {
-                            }
-                            cellMap.put(parts[CELL_INDEX_LAC] + "-" + parts[CELL_INDEX_CELL_ID],
-                                    new String[]{parts[CELL_INDEX_LONGITUDE], parts[CELL_INDEX_LATITUDE], parts[CELL_INDEX_PROVINCE]
-                                            , parts[CELL_INDEX_CITY], country}
-                            );
-                            cell_succ++;
+                            String provinc = parts[CELL_INDEX_PROVINCE];
+
+                                try {
+                                    country = DsFactory.getinstance().queryCountry(parts[CELL_INDEX_LONGITUDE], parts[CELL_INDEX_LATITUDE]);
+                                } catch (Exception e) {
+                                }
+                                cellMap.put(parts[CELL_INDEX_LAC] + "-" + parts[CELL_INDEX_CELL_ID],
+                                        new String[]{parts[CELL_INDEX_LONGITUDE], parts[CELL_INDEX_LATITUDE], parts[CELL_INDEX_PROVINCE]
+                                                , parts[CELL_INDEX_CITY], country}
+                                );
+                                cell_succ++;
+
                         }else{
-                           cell_error++;
+                            cell_error++;
                         }
                     }
                 } else if (p.toString().toLowerCase().contains(lrc_fileName.toLowerCase())) {
-                    //分区表
-                    String month = p.getParent().getParent().getName();
-                    String day = p.getParent().getName();
                     //读缓存文件，并放到mem中
                     br = new BufferedReader(new FileReader(p.toString()));
                     while (null != (info = br.readLine())) {
                         String[] parts = info.split(lrc_delimiterIn, -1);
                         if (parts.length >= lrc_columnSize) {
-                            putLastLrc(parts[LRC_INDEX_MSISDN],
-                                    new DimensionLrc(parts[LRC_INDEX_PROVINCE], parts[LRC_INDEX_CITY], month, day));
+                            lrcMap.put(parts[LRC_INDEX_MSISDN], new String[]{parts[LRC_INDEX_PROVINCE], parts[LRC_INDEX_CITY]});
                             lrc_succ++;
                         }else{
                             lrc_error++;
@@ -137,6 +140,7 @@ public class DimensionReader implements Serializable {
                     }
                 }else{
                     file_error++;
+                    errorFile.add(p.toString());
                 }
             }
         } catch (Exception e) {
@@ -152,14 +156,7 @@ public class DimensionReader implements Serializable {
         }
     }
 
-    private void putLastLrc(String tac, DimensionLrc infos) {
-        if (!lrcMap.containsKey(tac)) {
-            lrcMap.put(tac, infos);
-        } else if (infos.compareTo(lrcMap.get(tac)) > 0) {
-            lrcMap.put(tac, infos);
-        }
-    }
-//    public DimensionReader(){
+    //    public DimensionReader(){
 //        lrcMap = new HashMap<String,DimensionLrc>();
 //    }
 //    public static void main(String []  args){
@@ -195,5 +192,13 @@ public class DimensionReader implements Serializable {
 
     public int getFile_error() {
         return file_error;
+    }
+
+    public List<String> getErrorFile() {
+        return errorFile;
+    }
+
+    public int getCell_other() {
+        return cell_other;
     }
 }

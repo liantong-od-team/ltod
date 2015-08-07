@@ -7,6 +7,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -17,7 +18,7 @@ public class CellOdTraceMapper extends Mapper<LongWritable, Text, OdTracePair, O
 
     private Metadata meta;
     private Map<String, String[]> cellMap;
-    private Map<String, DimensionLrc> lrcMap;
+    private Map<String, String[]> lrcMap;
 
     private int AREA_ID_INDEX;
     private int TICKET_TYPE_INDEX;
@@ -68,9 +69,15 @@ public class CellOdTraceMapper extends Mapper<LongWritable, Text, OdTracePair, O
         cellMap = reader.getCellMap();
         lrcMap = reader.getLrcMap();
 
+        List<String> tes = reader.getErrorFile();
+        for(String s:tes){
+            context.getCounter("TEST",s).increment(1);
+        }
+
 //        cellMap  = new HashMap<String, String[]>();
 //        lrcMap = new HashMap<String, DimensionLrc>();
         context.getCounter("RELATIONS","CELL_DIM_SUCC").increment(reader.getCell_succ());
+        context.getCounter("RELATIONS","CELL_DIM_OTHER").increment(reader.getCell_other());
         context.getCounter("RELATIONS","CELL_DIM_ERROR").increment(reader.getCell_error());
         context.getCounter("RELATIONS","LRC_DIM_SUCC").increment(reader.getLrc_succ());
         context.getCounter("RELATIONS","LRC_DIM_ERROR").increment(reader.getLrc_error());
@@ -103,7 +110,7 @@ public class CellOdTraceMapper extends Mapper<LongWritable, Text, OdTracePair, O
         if(time<0){
             context.getCounter(COUNTER.ErrorDate).increment(1);
             return;
-    }
+        }
 
 //         逻辑需确定？
 //        "00：主叫呼出话单
@@ -171,9 +178,9 @@ public class CellOdTraceMapper extends Mapper<LongWritable, Text, OdTracePair, O
         String tac = msisdn.substring(0,7);
         //关联归属地
         if(lrcMap.containsKey(tac)) {
-            DimensionLrc dim = lrcMap.get(tac);
-            rsval.setLrc_province(dim.getProvince());
-            rsval.setLrc_city(dim.getCity());
+            String[] dim = lrcMap.get(tac);
+            rsval.setLrc_province(dim[0]);
+            rsval.setLrc_city(dim[1]);
             context.getCounter("RELATIONS","LRC_SUCC").increment(1);
         }else{
             rsval.setLrc_province("");

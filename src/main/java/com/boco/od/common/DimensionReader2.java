@@ -46,6 +46,7 @@ public class DimensionReader2 implements Serializable {
 //    private int LRC_INDEX_DAY;
     private int cell_succ;
     private int cell_error;
+    private int cell_other;
     private int lrc_succ;
     private int lrc_error;
     private int file_error;
@@ -109,15 +110,20 @@ public class DimensionReader2 implements Serializable {
                         String[] parts = info.split(cell_delimiterIn, -1);
                         if (parts.length >= cell_columnSize) {
                             String country = "";
-                            try {
-                                country = DsFactory.getinstance().queryCountry(parts[CELL_INDEX_LONGITUDE], parts[CELL_INDEX_LATITUDE]);
-                            } catch (Exception e) {
+                            String provinc = parts[CELL_INDEX_PROVINCE];
+                            if(provinc!=null&&(provinc.trim().equals("011")||provinc.trim().equals("013")||provinc.trim().equals("018"))) {
+                                try {
+                                    country = DsFactory.getinstance().queryCountry(parts[CELL_INDEX_LONGITUDE], parts[CELL_INDEX_LATITUDE]);
+                                } catch (Exception e) {
+                                }
+                                cellMap.put(parts[CELL_INDEX_LAC] + "-" + parts[CELL_INDEX_CELL_ID],
+                                        new String[]{parts[CELL_INDEX_LONGITUDE], parts[CELL_INDEX_LATITUDE], parts[CELL_INDEX_PROVINCE]
+                                                , parts[CELL_INDEX_CITY], country}
+                                );
+                                cell_succ++;
+                            }else{
+                                cell_other++;
                             }
-                            cellMap.put(parts[CELL_INDEX_LAC] + "-" + parts[CELL_INDEX_CELL_ID],
-                                    new String[]{parts[CELL_INDEX_LONGITUDE], parts[CELL_INDEX_LATITUDE], parts[CELL_INDEX_PROVINCE]
-                                            , parts[CELL_INDEX_CITY], country}
-                            );
-                            cell_succ++;
                         }else{
                            cell_error++;
                         }
@@ -192,5 +198,9 @@ public class DimensionReader2 implements Serializable {
 
     public List<String> getErrorFile() {
         return errorFile;
+    }
+
+    public int getCell_other() {
+        return cell_other;
     }
 }

@@ -77,6 +77,7 @@ public class CellOdTraceMapper2 extends Mapper<LongWritable, Text, OdTracePair, 
 //        cellMap  = new HashMap<String, String[]>();
 //        lrcMap = new HashMap<String, DimensionLrc>();
         context.getCounter("RELATIONS","CELL_DIM_SUCC").increment(reader.getCell_succ());
+        context.getCounter("RELATIONS","CELL_DIM_OTHER").increment(reader.getCell_other());
         context.getCounter("RELATIONS","CELL_DIM_ERROR").increment(reader.getCell_error());
         context.getCounter("RELATIONS","LRC_DIM_SUCC").increment(reader.getLrc_succ());
         context.getCounter("RELATIONS","LRC_DIM_ERROR").increment(reader.getLrc_error());
