@@ -1,7 +1,8 @@
 package com.boco.od.livework;
 
 import com.boco.od.common.*;
-
+import java.io.FileWriter;
+import java.io.IOException;
 import com.boco.od.utils.DateUtils;
 import com.boco.od.utils.DsFactory;
 import org.apache.hadoop.io.LongWritable;
@@ -12,13 +13,35 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
-
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+import org.apache.log4j.xml.DOMConfigurator;
 /**
  * Created by tianweiqi on 2015/8/5
  */
 public class LiveWorkMapper  extends Mapper<LongWritable, Text, LiveWorkPair, LiveWorkRecord>{
 
+    static Logger log4j = Logger.getLogger(LiveWorkMapper.class.getClass());
 
+  /*  public LiveWorkMapper(){
+        System.out.println("hello, I am HMain");
+
+        printLog();
+    }*/
+
+    private void printLog(){
+        BasicConfigurator.configure();
+        PropertyConfigurator.configure("/home/hadoop/hadoop-2.4.0/etc/hadoop/log4j.properties");
+
+        DOMConfigurator.configure("");
+
+        log4j.debug("log4j debug");
+        log4j.info("log4j info");
+        log4j.warn("log4j warn");
+        log4j.error("log4j error");
+        log4j.fatal("log4j fatal");
+    }
 
     private int date_day_INDEX;
     private int msisdn_INDEX;
@@ -51,7 +74,16 @@ public class LiveWorkMapper  extends Mapper<LongWritable, Text, LiveWorkPair, Li
 
     @Override
     protected void setup(Context context) {
+        BasicConfigurator.configure();
+        PropertyConfigurator.configure("/home/hadoop/hadoop-2.4.0/etc/hadoop/log4j.properties");
 
+        DOMConfigurator.configure("");
+
+        log4j.debug("log4j debug");
+        log4j.info("log4j info");
+        log4j.warn("log4j warn");
+        log4j.error("log4j error");
+        log4j.fatal("log4j fatal");
 
         //delimiterIn=\u0001;
         pattern = Pattern.compile(",");
@@ -69,13 +101,13 @@ public class LiveWorkMapper  extends Mapper<LongWritable, Text, LiveWorkPair, Li
             context.getCounter(COUNTER.ErrorColumnSize).increment(1);
             return;
         }
-
+        log4j.fatal("date_day_INDEX fatal"+date_day_INDEX);
         date_day_VAL=vals[date_day_INDEX];
         msisdn_VAL=vals[msisdn_INDEX];
         action_type_VAL=vals[action_type_INDEX];
         longitude_VAL=vals[longitude_INDEX];
         latitude_VAL=vals[latitude_INDEX];
-
+        log4j.fatal("latitude_VAL fatal"+latitude_VAL);
 
         time = DateUtils.convertString2Time(date_day_VAL);
         //时间非法
@@ -117,8 +149,19 @@ public class LiveWorkMapper  extends Mapper<LongWritable, Text, LiveWorkPair, Li
 
         context.getCounter("RELATIONS","CELL_SUCC").increment(1);
 
+        System.out.print("rsval:"+rsval);
+        System.out.print("rskey:"+rskey);
 
-
+        String str="rsval:"+rsval;
+        FileWriter writer;
+        try {
+            writer = new FileWriter("rsval.txt");
+            writer.write(str);
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         try {
             context.write(rskey,rsval);
             context.getCounter(COUNTER.MapperOutput).increment(1);
