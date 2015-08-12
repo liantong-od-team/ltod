@@ -18,7 +18,7 @@ import java.util.Map;
 /**
  * Created by ranhualin on 2015/8/3.
  */
-public class DimensionReader implements Serializable {
+public class DimensionReader2 implements Serializable {
 
     private Map<String, String[]> cellMap;
     private Map<String, String[]> lrcMap;
@@ -53,7 +53,7 @@ public class DimensionReader implements Serializable {
 
     private List<String> errorFile=new ArrayList<String>();
 
-    public DimensionReader(Configuration conf) {
+    public DimensionReader2(Configuration conf) {
         this.conf = conf;
         Metadata cellMeta = new Metadata(Constants.CELL_PROP_PATH);
         cell_fileName= conf.get("cell_fileName",cellMeta.getValue("fileName"));
@@ -98,7 +98,7 @@ public class DimensionReader implements Serializable {
         BufferedReader br = null;
         //获得当前作业的DistributedCache相关文件
         try {
-            Path[] distributePaths = DistributedCache.getLocalCacheFiles(conf);
+           Path[] distributePaths = DistributedCache.getLocalCacheFiles(conf);
 //            System.out.println("#distributePaths#" + distributePaths);
             String info = null;
             for (Path  p: distributePaths) {
@@ -111,7 +111,7 @@ public class DimensionReader implements Serializable {
                         if (parts.length >= cell_columnSize) {
                             String country = "";
                             String provinc = parts[CELL_INDEX_PROVINCE];
-
+                            if(provinc!=null&&(provinc.trim().equals("011")||provinc.trim().equals("013")||provinc.trim().equals("018"))) {
                                 try {
                                     country = DsFactory.getinstance().queryCountry(parts[CELL_INDEX_LONGITUDE], parts[CELL_INDEX_LATITUDE]);
                                 } catch (Exception e) {
@@ -121,9 +121,11 @@ public class DimensionReader implements Serializable {
                                                 , parts[CELL_INDEX_CITY], country}
                                 );
                                 cell_succ++;
-
+                            }else{
+                                cell_other++;
+                            }
                         }else{
-                            cell_error++;
+                           cell_error++;
                         }
                     }
                 } else if (p.toString().toLowerCase().contains(lrc_fileName.toLowerCase())) {
@@ -156,7 +158,7 @@ public class DimensionReader implements Serializable {
         }
     }
 
-    //    public DimensionReader(){
+  //    public DimensionReader(){
 //        lrcMap = new HashMap<String,DimensionLrc>();
 //    }
 //    public static void main(String []  args){

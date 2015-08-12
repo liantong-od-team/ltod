@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 /**
  * Created by ranhualin on 2015/7/30.
  */
-public class CellOdTraceMapper extends Mapper<LongWritable, Text, OdTracePair, OdTraceRecord>{
+public class CellOdTraceMapper1 extends Mapper<LongWritable, Text, OdTracePair, OdTraceRecord>{
 
     private Metadata meta;
     private Map<String, String[]> cellMap;
@@ -46,7 +46,7 @@ public class CellOdTraceMapper extends Mapper<LongWritable, Text, OdTracePair, O
     private String msisdn;
     private long time;
 
-    public CellOdTraceMapper() {
+    public CellOdTraceMapper1() {
     }
 
     @Override
@@ -65,7 +65,7 @@ public class CellOdTraceMapper extends Mapper<LongWritable, Text, OdTracePair, O
         delimiterIn = meta.getValue("delimiterIn");
         pattern = Pattern.compile(delimiterIn);
 
-        DimensionReader reader = new DimensionReader(context.getConfiguration());
+        DimensionReaderNew reader = new DimensionReaderNew(context.getConfiguration());
         cellMap = reader.getCellMap();
         lrcMap = reader.getLrcMap();
 
@@ -77,7 +77,6 @@ public class CellOdTraceMapper extends Mapper<LongWritable, Text, OdTracePair, O
 //        cellMap  = new HashMap<String, String[]>();
 //        lrcMap = new HashMap<String, DimensionLrc>();
         context.getCounter("RELATIONS","CELL_DIM_SUCC").increment(reader.getCell_succ());
-        context.getCounter("RELATIONS","CELL_DIM_OTHER").increment(reader.getCell_other());
         context.getCounter("RELATIONS","CELL_DIM_ERROR").increment(reader.getCell_error());
         context.getCounter("RELATIONS","LRC_DIM_SUCC").increment(reader.getLrc_succ());
         context.getCounter("RELATIONS","LRC_DIM_ERROR").increment(reader.getLrc_error());
@@ -110,7 +109,7 @@ public class CellOdTraceMapper extends Mapper<LongWritable, Text, OdTracePair, O
         if(time<0){
             context.getCounter(COUNTER.ErrorDate).increment(1);
             return;
-        }
+    }
 
 //         逻辑需确定？
 //        "00：主叫呼出话单

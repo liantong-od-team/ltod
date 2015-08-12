@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 /**
  * Created by ranhualin on 2015/7/30.
  */
-public class CellOdTraceMapper extends Mapper<LongWritable, Text, OdTracePair, OdTraceRecord>{
+public class CellOdTraceMapper2 extends Mapper<LongWritable, Text, OdTracePair, OdTraceRecord>{
 
     private Metadata meta;
     private Map<String, String[]> cellMap;
@@ -46,7 +46,7 @@ public class CellOdTraceMapper extends Mapper<LongWritable, Text, OdTracePair, O
     private String msisdn;
     private long time;
 
-    public CellOdTraceMapper() {
+    public CellOdTraceMapper2() {
     }
 
     @Override
@@ -65,7 +65,7 @@ public class CellOdTraceMapper extends Mapper<LongWritable, Text, OdTracePair, O
         delimiterIn = meta.getValue("delimiterIn");
         pattern = Pattern.compile(delimiterIn);
 
-        DimensionReader reader = new DimensionReader(context.getConfiguration());
+        DimensionReader2 reader = new DimensionReader2(context.getConfiguration());
         cellMap = reader.getCellMap();
         lrcMap = reader.getLrcMap();
 
@@ -110,7 +110,7 @@ public class CellOdTraceMapper extends Mapper<LongWritable, Text, OdTracePair, O
         if(time<0){
             context.getCounter(COUNTER.ErrorDate).increment(1);
             return;
-        }
+    }
 
 //         逻辑需确定？
 //        "00：主叫呼出话单

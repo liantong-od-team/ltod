@@ -60,15 +60,23 @@ public class DsFactory {
     }
 
 
+    private String  sql = "select name from (select m.name,SDO_GEOM.RELATE(GEOM,'Contains', MDSYS.SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(%s, %s, 0), NULL, NULL), 0.5) status from %s m) where status = 'CONTAINS'";
+
+
+
+
     public String queryProvince(String longitude, String latitude) {
 
+        String provSql = String.format(sql,":lng",":lat",":tbl");
         Map<String, String> paramArr = new HashMap<String, String>();
         paramArr.put("lng", longitude);
         paramArr.put("lat", latitude);
-        String r = jdbc.queryForObject("select Get_Prov_Country(:lng, :lat, 'prov') prov  FROM dual", paramArr, new RowMapper<String>() {
+        paramArr.put("tbl", "GIS_PROVINCE");
+
+        String r = jdbc.queryForObject(provSql, paramArr, new RowMapper<String>() {
             @Override
             public String mapRow(ResultSet rs, int i) throws SQLException {
-                String s = rs.getString("prov");
+                String s = rs.getString("name");
                 return s;
             }
         });
@@ -76,14 +84,15 @@ public class DsFactory {
     }
 
     public String queryCountry(String longitude, String latitude) {
-
+        String countrySql = String.format(sql,":lng",":lat",":tbl");
         Map<String, String> paramArr = new HashMap<String, String>();
         paramArr.put("lng", longitude);
         paramArr.put("lat", latitude);
-        String r = jdbc.queryForObject("select Get_Prov_Country(:lng, :lat, 'country') country FROM dual", paramArr, new RowMapper<String>(){
+        paramArr.put("tbl", "GIS_COUNTRY");
+        String r = jdbc.queryForObject(countrySql, paramArr, new RowMapper<String>(){
             @Override
             public String mapRow(ResultSet rs, int i) throws SQLException {
-                String s = rs.getString("country");
+                String s = rs.getString("name");
                 return s;
             }
         });
