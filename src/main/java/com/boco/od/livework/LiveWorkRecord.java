@@ -41,7 +41,7 @@ public class LiveWorkRecord implements Writable,Cloneable {
     }
     @Override
     protected Object clone() throws CloneNotSupportedException {
-        return (LiveWorkRecord)super.clone();
+        return super.clone();
     }
     public String getMsisdn() {
         return msisdn;

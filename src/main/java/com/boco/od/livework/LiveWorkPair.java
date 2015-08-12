@@ -21,7 +21,7 @@ public  class LiveWorkPair implements WritableComparable<LiveWorkPair> {
     public String getMsisdn() {
         return msisdn;
     }
-    public long getTime() {
+    public int getTime() {
         return day;
     }
 
@@ -33,7 +33,7 @@ public  class LiveWorkPair implements WritableComparable<LiveWorkPair> {
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeUTF(msisdn);
-        out.writeLong(day);
+        out.writeInt(day);
     }
     @Override
     //The hashCode() method is used by the HashPartitioner (the default partitioner in MapReduce)
@@ -56,7 +56,7 @@ public  class LiveWorkPair implements WritableComparable<LiveWorkPair> {
         if (!msisdn.equals(o.getMsisdn())) {
             return  msisdn.compareTo(o.getMsisdn());
         } else if (day != o.getTime()) {
-            return day - o.day>0?1:-1;
+            return (day - o.day)>0?1:-1;
         } else {
             return 0;
         }

@@ -8,7 +8,7 @@ import com.boco.od.utils.DsFactory;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-
+import java.util.Random;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +20,7 @@ import org.apache.log4j.xml.DOMConfigurator;
 /**
  * Created by tianweiqi on 2015/8/5
  */
-public class LiveWorkMapper  extends Mapper<LongWritable, Text, LiveWorkPair, LiveWorkRecord>{
+public class LiveWorkMapper  extends Mapper<Object, Text, LiveWorkPair, LiveWorkRecord>{
 
     static Logger log4j = Logger.getLogger(LiveWorkMapper.class.getClass());
 
@@ -42,12 +42,12 @@ public class LiveWorkMapper  extends Mapper<LongWritable, Text, LiveWorkPair, Li
         log4j.error("log4j error");
         log4j.fatal("log4j fatal");
     }
-
-    private int date_day_INDEX;
-    private int msisdn_INDEX;
-    private int action_type_INDEX;
-    private int longitude_INDEX;
-    private int latitude_INDEX;
+   // 20150810,13721323533,工作,115.60033602821871,39.196659996472664
+    private int date_day_INDEX=0;
+    private int msisdn_INDEX=1;
+    private int action_type_INDEX=2;
+    private int longitude_INDEX=3;
+    private int latitude_INDEX=4;
     //private int LAC_INDEX;
    // private int CELL_ID_INDEX;
 
@@ -60,7 +60,7 @@ public class LiveWorkMapper  extends Mapper<LongWritable, Text, LiveWorkPair, Li
     protected LiveWorkRecord rsval = new LiveWorkRecord();
 
     private String date_day_VAL;
-    private String msisdn_VAL;
+
     private String action_type_VAL;
     private String longitude_VAL;
     private String latitude_VAL;
@@ -74,7 +74,7 @@ public class LiveWorkMapper  extends Mapper<LongWritable, Text, LiveWorkPair, Li
 
     @Override
     protected void setup(Context context) {
-        BasicConfigurator.configure();
+  /*      BasicConfigurator.configure();
         PropertyConfigurator.configure("/home/hadoop/hadoop-2.4.0/etc/hadoop/log4j.properties");
 
         DOMConfigurator.configure("");
@@ -83,7 +83,7 @@ public class LiveWorkMapper  extends Mapper<LongWritable, Text, LiveWorkPair, Li
         log4j.info("log4j info");
         log4j.warn("log4j warn");
         log4j.error("log4j error");
-        log4j.fatal("log4j fatal");
+        log4j.fatal("log4j fatal");*/
 
         //delimiterIn=\u0001;
         pattern = Pattern.compile(",");
@@ -92,55 +92,94 @@ public class LiveWorkMapper  extends Mapper<LongWritable, Text, LiveWorkPair, Li
     }
 
     @Override
-    public void map(LongWritable offset, Text value, Context context)
-            throws IOException {
+    public void map(Object key, Text value, Context context)
+            throws IOException,InterruptedException {
         context.getCounter(COUNTER.MapperInput).increment(1);
-        String val = value.toString();
-        String[] vals =pattern.split(val,-1);
-        if(vals.length!=columnSize){
+   //   String val = value.toString();
+     //   String[] vals =pattern.split(val,-1);
+     //  String[] vals = val.split(",");
+       // String words[] = val.toString().split(" |\t");
+      //  int x[]=new int[12];
+        // String[] vals = val.split(",");
+//val:com.boco.od.livework.LiveWorkRecord@493b0ccd
+
+
+     //    val="20150802,13810623623,xiuxi,116.297334,39.925338";
+
+        //System.out.println(vals.length);
+        //System.out.println(vals[0]);
+
+
+      String vals[] =       value.toString().split(",");
+
+
+        if (vals.length!=5){
             context.getCounter(COUNTER.ErrorColumnSize).increment(1);
+          return;
+        }
+
+
+
+
+     //   log4j.fatal("date_day_INDEX fatal"+date_day_INDEX);
+     date_day_VAL=vals[date_day_INDEX];
+ msisdn=vals[msisdn_INDEX];
+
+
+       action_type_VAL=vals[action_type_INDEX];
+     longitude_VAL=vals[longitude_INDEX];
+      latitude_VAL=vals[latitude_INDEX];
+
+        if(longitude_VAL.length()<8){
+            context.getCounter(COUNTER.Null).increment(1);
             return;
         }
-        log4j.fatal("date_day_INDEX fatal"+date_day_INDEX);
-        date_day_VAL=vals[date_day_INDEX];
-        msisdn_VAL=vals[msisdn_INDEX];
-        action_type_VAL=vals[action_type_INDEX];
-        longitude_VAL=vals[longitude_INDEX];
-        latitude_VAL=vals[latitude_INDEX];
-        log4j.fatal("latitude_VAL fatal"+latitude_VAL);
+
+        //log4j.fatal("latitude_VAL fatal"+latitude_VAL);
 
         time = DateUtils.convertString2Time(date_day_VAL);
         //时间非法
         if(time<0){
             context.getCounter(COUNTER.ErrorDate).increment(1);
-            return;
+           // return;
+        }
+      /*  Random random = new Random();
+*//*        int incr=0;
+
+        for(int i = 0; i < 100;i++) {
+
+            incr=Math.abs(random.nextInt())%18;
+            System.out.println(incr);
+        }*//*
+
+
+        Random random = new Random();
+        int incr=0;
+
+        for(int i = 0; i < 20;i++) {
+
+            incr1=Math.abs(random.nextInt())%10000;
+
+            Double b = (double) (incr/5000.0);
+            System.out.println(b);
         }
 
-//         逻辑需确定？
-//        "00：主叫呼出话单
-//        01：被叫呼入话单
-//        02：呼叫前转话单
-//        03：呼转拆分的话单
-//        10：短消息发送话单(MO)
-//        11：短消息接收话单(MT)
-//        12：短消息转发MO-F
-//        13：短消息转发MT-F
-//        18：国际漫游主叫短信
-//        19：国际漫游被叫短信
-//        20：国际漫游语音附加业务
-//        EE：尾记录（后续系统可不用处理）
-//        FF：未定义业务话单"
+        int tmpmdate_day_VAL=Integer.parseInt(date_day_VAL);
+        tmpmdate_day_VAL=tmpmdate_day_VAL+Math.abs(random.nextInt())%18;
+
+
+        date_day_VAL=tmpmdate_day_VAL+"";*/
 
         //号码为空
-        if(msisdn==null||"".equals(msisdn.trim())){
+        if(msisdn==null||"".equals(msisdn.trim())||msisdn.length()>11){
             context.getCounter(COUNTER.Null).increment(1);
-            return;
+          return;
         }
       //  msisdn = msisdn.trim();
         //rskey.set(msisdn);
         msisdn = msisdn.trim();
-        rskey.set(msisdn,Integer.parseInt(date_day_VAL));
-
+       rskey.set(msisdn,Integer.parseInt(date_day_VAL));
+  // rskey.set(msisdn,123);
         rsval.setDateDay(date_day_VAL);
       rsval.setMsisdn(msisdn);
         rsval.setAction_type(action_type_VAL);

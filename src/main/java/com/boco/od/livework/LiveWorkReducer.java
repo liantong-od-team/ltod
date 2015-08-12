@@ -23,10 +23,17 @@ public class LiveWorkReducer extends Reducer<LiveWorkPair, LiveWorkRecord, NullW
     private Text rsval = new Text();
     private String lastMsisdn = null;
     private int linenum = 0;
+
+    private  int liveArrayNum=0;
+    private  int workArrayNum=0;
     private String lastRecordDay = null;
     private LiveWorkRecord lastRecord = null;
 
     private String firstDay = null;
+    LiveWorkRecord liveArray[] = new LiveWorkRecord[1000];
+    LiveWorkRecord workArray[] = new LiveWorkRecord[1000];
+
+
 
 
     @Override
@@ -39,34 +46,70 @@ public class LiveWorkReducer extends Reducer<LiveWorkPair, LiveWorkRecord, NullW
         for (LiveWorkRecord val : values) {
             linenum++;
             String msisdn = key.getMsisdn();
+           // context.getCounter(COUNTER.ReducerOutput).increment(1); //
+          // rsval.set("reduceval:" + val );
+          // context.write(NullWritable.get(), rsval);
 
-            LiveWorkRecord liveArray[] = new LiveWorkRecord[100];
-            LiveWorkRecord workArray[] = new LiveWorkRecord[100];
             if ((lastMsisdn == null) && (lastRecord == null)) {//第一条数据
                 lastRecordDay = val.getDateDay();
                 lastRecord = getDayFirstRecord(val);//第一条数据必须是000000
                 lastMsisdn = msisdn;
+
+             //  rsval.set("lastRecordDay:" + lastRecordDay );
+               //  context.write(NullWritable.get(), rsval);
+              //  rsval.set("lastMsisdn:" + lastMsisdn );
+              //  context.write(NullWritable.get(), rsval);
             } else if (!msisdn.equals(lastMsisdn)) {//用户号码已经变化，下一个用户的第一条数据
                // if (!checkLastSecond(lastRecord.getDateDay(), lastRecord.getTime())) {//判断上一条数据是否是235959，如不是
                 //    writeRecord(context, getOutLine(lastMsisdn, lastRecord, getDayLastRecord(lastRecord)));
                //}
 
 
-                reduceRecord(context, lastMsisdn ,"LIVE",liveArray);
-                reduceRecord(context, lastMsisdn ,"WORK",workArray);
+            //    rsval.set("liveArrayNum:" + liveArrayNum );
+              //   context.write(NullWritable.get(), rsval);
+               //  rsval.set("workArrayNum:" + workArrayNum );
+             //   context.write(NullWritable.get(), rsval);
+               reduceRecord(context, lastMsisdn ,"LIVE",liveArray,liveArrayNum);
+                reduceRecord(context, lastMsisdn ,"WORK",workArray,workArrayNum);
                 lastRecordDay = val.getDateDay();
                 lastRecord = getDayFirstRecord(val);//第一条数据必须是000000
                 lastMsisdn = msisdn;
               //  LiveWorkRecord[] intArray;
                 linenum=0;
-                liveArray=null;
-                workArray=null;
+               // liveArray=null;
+              //  workArray=null;
+                liveArrayNum=0;
+                workArrayNum=0;
             } else {//某号码中间数据，
                 //有没有跨天
-                if(val.getAction_type().equals("Live"))
-                liveArray[linenum]=val;
+               // if(workArrayNum>50||liveArrayNum>50)return;
+                if(val.getAction_type().equalsIgnoreCase("work"))
+                {
+                 // rsval.set("DateDay:" + val.getDateDay() );
+                  //  context.write(NullWritable.get(), rsval);
+                  //  rsval.set("Msisdn:" + val.getMsisdn() );
+                 //   context.write(NullWritable.get(), rsval);
+                    workArray[workArrayNum]= new LiveWorkRecord();
+                    workArray[workArrayNum].setAction_type(val.getAction_type());
+                    workArray[workArrayNum].setDateDay(val.getDateDay());
+                    workArray[workArrayNum].setLatitude(val.getLatitude());
+                    workArray[workArrayNum].setLongitude(val.getLongitude());
+                    workArray[workArrayNum].setMsisdn(val.getMsisdn());
+                     //cloneRecord(val);
+                    workArrayNum++;
+                }
+
                 else
-                workArray[linenum]=val;
+                {
+                    liveArray[liveArrayNum]= new LiveWorkRecord();
+                    liveArray[liveArrayNum].setAction_type(val.getAction_type());
+                    liveArray[liveArrayNum].setDateDay(val.getDateDay());
+                    liveArray[liveArrayNum].setLatitude(val.getLatitude());
+                    liveArray[liveArrayNum].setLongitude(val.getLongitude());
+                    liveArray[liveArrayNum].setMsisdn(val.getMsisdn());
+                    //cloneRecord(val);
+                    liveArrayNum++;
+                }
               //  lastRecordDay = val.getDateDay();
             //    lastRecord = getDayFirstRecord(val);//第一条数据必须是000000
               //  lastMsisdn = msisdn;
@@ -84,77 +127,164 @@ public class LiveWorkReducer extends Reducer<LiveWorkPair, LiveWorkRecord, NullW
     }
 
 
-    private void reduceRecord(Context context,String msisdn ,String action_type,LiveWorkRecord record[]) {
+    private void reduceRecord(Context context,String msisdn ,String action_type,LiveWorkRecord[] record,int arrynum)  throws IOException, InterruptedException {
 
-        int recordlenth=record.length;
 
-        int k=5;
+
+        int recordlenth=arrynum;
+
+        int cycle=5;
+        int daynum=0;
+        int duration=15;
         int currentday;
-        for(int i=0;i<recordlenth;i++)
+        if(action_type.equals("WORK"))
         {
-            currentday=Integer.parseInt(record[i].getDateDay());
-          //  if((recordlenth-i)<15)break;
-           // for(int j=i;j<Math.min(i+15,recordlenth);j++)
-            for(int j=i;j<recordlenth;j++)
+            for(int i=0;i<recordlenth;i++)
             {
+                currentday=Integer.parseInt(workArray[i].getDateDay());
+                //  if((recordlenth-i)<15)break;
+                // for(int j=i;j<Math.min(i+15,recordlenth);j++)
                 double longitude=0.0;
                 double latitude=0.0;
-                int daynum=0;
-                if((Integer.parseInt(record[j].getDateDay())-currentday)>=(k-1))
+                for(int j=i;j<recordlenth;j++)
                 {
 
-                    StringBuffer sb = new StringBuffer(String.valueOf(currentday)).append(delimiterOut);
-                    //     sb.append(DateUtils.convertTime2FullString(last.getTime())).append(delimiterOut);
-                    //    sb.append(DateUtils.convertTime2FullString(curr.getTime())).append(delimiterOut);
+    /*                rsval.set(String.valueOf(currentday));
+                    context.write(NullWritable.get(), rsval);
+                    rsval.set(workArray[j].getDateDay());
+                    context.write(NullWritable.get(), rsval);*/
 
-
-                    sb.append(record[j].getDateDay()).append(delimiterOut);
-                    sb.append(k).append(delimiterOut);
-                    sb.append(msisdn).append(delimiterOut);
-                    sb.append(action_type).append(delimiterOut);
-                    sb.append(longitude).append(delimiterOut);
-                    sb.append(latitude).append(delimiterOut);
-
-                    String prov=DsFactory.getinstance().queryProvince(String.valueOf(longitude),String.valueOf(latitude));
-                    sb.append(prov).append(delimiterOut);
-                   // sb.append(latitude).append(delimiterOut);
-                    String county = DsFactory.getinstance().queryCountry(String.valueOf(longitude),String.valueOf(latitude));
-                    sb.append(county).append(delimiterOut);
-                  //  sb.append(msisdn).append(delimiterOut);
-
-                    rsval.set(sb.toString());
-                    try {
-                        try {
-                            context.write(NullWritable.get(), rsval);
-                        }catch (InterruptedException  e)
-                        {}
-                    }catch (IOException  e)
-                    {}
-
-
-                    context.getCounter(COUNTER.ReducerOutput).increment(1); //
-
-                }
-                else
-                {
-
-                     longitude=0.0;
-                     latitude=0.0;
-                     daynum=0;
-                    for(k=i;k<j;k++)
+                    if((Integer.parseInt(workArray[j].getDateDay())-currentday)>=(cycle-1))
                     {
-                        daynum++;
-                        longitude+=+Double.parseDouble(record[k].getLongitude());
-                        latitude+=+Double.parseDouble(record[k].getLatitude());
+      /*               rsval.set(String.valueOf(currentday));
+                   context.write(NullWritable.get(), rsval);
+                   rsval.set(workArray[j].getDateDay());
+                   context.write(NullWritable.get(), rsval);*/
+                        StringBuffer sb = new StringBuffer(String.valueOf(currentday)).append(delimiterOut);
+                        //     sb.append(DateUtils.convertTime2FullString(last.getTime())).append(delimiterOut);
+                        //    sb.append(DateUtils.convertTime2FullString(curr.getTime())).append(delimiterOut);
+
+
+                        sb.append(workArray[j].getDateDay()).append(delimiterOut);
+                        sb.append(String.valueOf(duration)).append(delimiterOut);
+                        sb.append(msisdn).append(delimiterOut);
+                        sb.append(action_type).append(delimiterOut);
+                        sb.append(String.valueOf(longitude)).append(delimiterOut);
+                        sb.append(String.valueOf(latitude)).append(delimiterOut);
+
+                       // String prov=DsFactory.getinstance().queryProvince(String.valueOf(longitude),String.valueOf(latitude));
+
+                        String prov="guizhou";//DsFactory.getinstance().queryProvince(String.valueOf(longitude),String.valueOf(latitude));
+                        sb.append(prov).append(delimiterOut);
+                        // sb.append(latitude).append(delimiterOut);
+                         //        String county = DsFactory.getinstance().queryCountry(String.valueOf(longitude),String.valueOf(latitude));
+                        String county = "zuiyang";//DsFactory.getinstance().queryCountry(String.valueOf(longitude),String.valueOf(latitude));
+                        sb.append(county);
+                        //  sb.append(msisdn).append(delimiterOut);
+
+                     rsval.set(sb.toString());
+                      context.write(NullWritable.get(), rsval);
+
+                        context.getCounter(COUNTER.ReducerOutput).increment(1); //
+                        break;
                     }
-                    longitude=longitude/((double) daynum);
-                 //   double theMean = (((double) length) / ((double) count));
-                    latitude=latitude/((double) daynum);
+                    else
+                    {
+
+                        longitude=0.0;
+                        latitude=0.0;
+                        daynum=0;
+                        for(int k=i;k<j;k++)
+                        {
+                            daynum++;
+                            longitude+=+Double.parseDouble(workArray[k].getLongitude());
+                            latitude+=+Double.parseDouble(workArray[k].getLatitude());
+                        }
+                        longitude=longitude/((double) daynum);
+                        //   double theMean = (((double) length) / ((double) count));
+                        latitude=latitude/((double) daynum);
+
+                    }
 
                 }
-
             }
         }
+        if(action_type.equals("LIVE"))
+        {
+            for(int i=0;i<recordlenth;i++)
+            {
+                currentday=Integer.parseInt(liveArray[i].getDateDay());
+                //  if((recordlenth-i)<15)break;
+                // for(int j=i;j<Math.min(i+15,recordlenth);j++)
+                for(int j=i;j<recordlenth;j++)
+                {
+                    double longitude=0.0;
+                    double latitude=0.0;
+
+                    if((Integer.parseInt(liveArray[j].getDateDay())-currentday)>=(cycle-1))
+                    {
+
+                        StringBuffer sb = new StringBuffer(liveArray[j].getDateDay()).append(delimiterOut);
+                        //     sb.append(DateUtils.convertTime2FullString(last.getTime())).append(delimiterOut);
+                        //    sb.append(DateUtils.convertTime2FullString(curr.getTime())).append(delimiterOut);
+
+
+                        sb.append(String.valueOf(currentday)).append(delimiterOut);
+                        sb.append(String.valueOf(duration)).append(delimiterOut);
+                        sb.append(msisdn).append(delimiterOut);
+                        sb.append(action_type).append(delimiterOut);
+                        sb.append(String.valueOf(longitude)).append(delimiterOut);
+                        sb.append(String.valueOf(latitude)).append(delimiterOut);
+
+                        //String prov=DsFactory.getinstance().queryProvince(String.valueOf(longitude),String.valueOf(latitude));
+                        String prov="guizhou";//DsFactory.getinstance().queryProvince(String.valueOf(longitude),String.valueOf(latitude));
+                        sb.append(prov).append(delimiterOut);
+                        // sb.append(latitude).append(delimiterOut);
+                      //  String county = DsFactory.getinstance().queryCountry(String.valueOf(longitude),String.valueOf(latitude));
+                        String county = "suiyang";//DsFactory.getinstance().queryCountry(String.valueOf(longitude),String.valueOf(latitude));
+                        sb.append(county);
+                        //  sb.append(msisdn).append(delimiterOut);
+
+                        rsval.set(sb.toString());
+                        try {
+                            try {
+                                context.write(NullWritable.get(), rsval);
+                            }catch (InterruptedException  e)
+                            {}
+                        }catch (IOException  e)
+                        {}
+
+
+                        context.getCounter(COUNTER.ReducerOutput).increment(1); //
+
+                        break;
+
+                    }
+                    else
+                    {
+
+                        longitude=0.0;
+                        latitude=0.0;
+                        daynum=0;
+                        for(int k=i;k<j;k++)
+                        {
+                            daynum++;
+                            longitude+=+Double.parseDouble(liveArray[k].getLongitude());
+                            latitude+=+Double.parseDouble(liveArray[k].getLatitude());
+                        }
+                        longitude=longitude/((double) daynum);
+                        //   double theMean = (((double) length) / ((double) count));
+                        latitude=latitude/((double) daynum);
+
+                    }
+
+                }
+            }
+        }
+    //  rsval.set("reduceRecord msisdn:" + msisdn + "val.recordlenth:"+recordlenth);
+      // context.write(NullWritable.get(), rsval);
+
+
 
       //  return newRecord;
     }
