@@ -8,7 +8,7 @@ import com.boco.od.utils.DateUtils;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
-
+import org.apache.hadoop.conf.Configuration;
 import java.io.IOException;
 import java.util.Random;
 
@@ -23,7 +23,7 @@ public class LiveWorkReducer extends Reducer<LiveWorkPair, LiveWorkRecord, NullW
     private Text rsval = new Text();
     private String lastMsisdn = null;
     private int linenum = 0;
-
+    private String dayNum;
     private  int liveArrayNum=0;
     private  int workArrayNum=0;
     private String lastRecordDay = null;
@@ -38,7 +38,8 @@ public class LiveWorkReducer extends Reducer<LiveWorkPair, LiveWorkRecord, NullW
 
     @Override
     public void setup(Context context) throws IOException, InterruptedException {
-
+        Configuration conf = context.getConfiguration();
+         dayNum = conf.get("dayNum");
     }
     @Override
     public void reduce(LiveWorkPair key, Iterable<LiveWorkRecord> values, Context context)
@@ -133,9 +134,9 @@ public class LiveWorkReducer extends Reducer<LiveWorkPair, LiveWorkRecord, NullW
 
         int recordlenth=arrynum;
 
-        int cycle=5;
+        int cycle=Integer.parseInt(dayNum);
         int daynum=0;
-        int duration=15;
+        int duration=cycle;
         int currentday;
         if(action_type.equals("WORK"))
         {
@@ -156,10 +157,22 @@ public class LiveWorkReducer extends Reducer<LiveWorkPair, LiveWorkRecord, NullW
 
                     if((Integer.parseInt(workArray[j].getDateDay())-currentday)>=(cycle-1))
                     {
-      /*               rsval.set(String.valueOf(currentday));
-                   context.write(NullWritable.get(), rsval);
-                   rsval.set(workArray[j].getDateDay());
-                   context.write(NullWritable.get(), rsval);*/
+
+
+                            daynum++;
+                            longitude+=+Double.parseDouble(workArray[j].getLongitude());
+                            latitude+=+Double.parseDouble(workArray[j].getLatitude());
+
+                        longitude=longitude/((double) daynum);
+                        //   double theMean = (((double) length) / ((double) count));
+                        latitude=latitude/((double) daynum);
+
+
+
+                       /*rsval.set(String.valueOf(currentday));
+                       context.write(NullWritable.get(), rsval);
+                       rsval.set(workArray[j].getDateDay());
+                       context.write(NullWritable.get(), rsval);*/
                         StringBuffer sb = new StringBuffer(String.valueOf(currentday)).append(delimiterOut);
                         //     sb.append(DateUtils.convertTime2FullString(last.getTime())).append(delimiterOut);
                         //    sb.append(DateUtils.convertTime2FullString(curr.getTime())).append(delimiterOut);
@@ -200,9 +213,9 @@ public class LiveWorkReducer extends Reducer<LiveWorkPair, LiveWorkRecord, NullW
                             longitude+=+Double.parseDouble(workArray[k].getLongitude());
                             latitude+=+Double.parseDouble(workArray[k].getLatitude());
                         }
-                        longitude=longitude/((double) daynum);
+                      //  longitude=longitude/((double) daynum);
                         //   double theMean = (((double) length) / ((double) count));
-                        latitude=latitude/((double) daynum);
+                       // latitude=latitude/((double) daynum);
 
                     }
 
@@ -223,13 +236,19 @@ public class LiveWorkReducer extends Reducer<LiveWorkPair, LiveWorkRecord, NullW
 
                     if((Integer.parseInt(liveArray[j].getDateDay())-currentday)>=(cycle-1))
                     {
+                        daynum++;
+                        longitude+=+Double.parseDouble(liveArray[j].getLongitude());
+                        latitude+=+Double.parseDouble(liveArray[j].getLatitude());
 
-                        StringBuffer sb = new StringBuffer(liveArray[j].getDateDay()).append(delimiterOut);
+                        longitude=longitude/((double) daynum);
+                        //   double theMean = (((double) length) / ((double) count));
+                        latitude=latitude/((double) daynum);
+                        StringBuffer sb = new StringBuffer(String.valueOf(currentday)).append(delimiterOut);
                         //     sb.append(DateUtils.convertTime2FullString(last.getTime())).append(delimiterOut);
                         //    sb.append(DateUtils.convertTime2FullString(curr.getTime())).append(delimiterOut);
 
 
-                        sb.append(String.valueOf(currentday)).append(delimiterOut);
+                        sb.append(liveArray[j].getDateDay()).append(delimiterOut);
                         sb.append(String.valueOf(duration)).append(delimiterOut);
                         sb.append(msisdn).append(delimiterOut);
                         sb.append(action_type).append(delimiterOut);
@@ -272,9 +291,9 @@ public class LiveWorkReducer extends Reducer<LiveWorkPair, LiveWorkRecord, NullW
                             longitude+=+Double.parseDouble(liveArray[k].getLongitude());
                             latitude+=+Double.parseDouble(liveArray[k].getLatitude());
                         }
-                        longitude=longitude/((double) daynum);
+                     //   longitude=longitude/((double) daynum);
                         //   double theMean = (((double) length) / ((double) count));
-                        latitude=latitude/((double) daynum);
+                       // latitude=latitude/((double) daynum);
 
                     }
 
