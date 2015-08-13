@@ -186,12 +186,13 @@ public class LiveWorkReducer extends Reducer<LiveWorkPair, LiveWorkRecord, NullW
                         sb.append(String.valueOf(latitude)).append(delimiterOut);
 
                        // String prov=DsFactory.getinstance().queryProvince(String.valueOf(longitude),String.valueOf(latitude));
-
-                        String prov="天朝";//DsFactory.getinstance().queryProvince(String.valueOf(longitude),String.valueOf(latitude));
+                       // String.valueOf(longitude).substring(0,6)+String.valueOf(latitude).substring(0,3);
+                        String prov= String.valueOf(longitude).substring(0,3)+"-"+String.valueOf(latitude).substring(0,2);//DsFactory.getinstance().queryProvince(String.valueOf(longitude),String.valueOf(latitude));
                         sb.append(prov).append(delimiterOut);
                         // sb.append(latitude).append(delimiterOut);
                          //        String county = DsFactory.getinstance().queryCountry(String.valueOf(longitude),String.valueOf(latitude));
-                        String county = "皇城";//DsFactory.getinstance().queryCountry(String.valueOf(longitude),String.valueOf(latitude));
+                        String county = String.valueOf(longitude).substring(0,5)+"-"+String.valueOf(latitude).substring(0,4);//DsFactory.getinstance().queryCountry(String.valueOf(longitude),String.valueOf(latitude));
+
                         sb.append(county);
                         //  sb.append(msisdn).append(delimiterOut);
 
@@ -256,11 +257,11 @@ public class LiveWorkReducer extends Reducer<LiveWorkPair, LiveWorkRecord, NullW
                         sb.append(String.valueOf(latitude)).append(delimiterOut);
 
                         //String prov=DsFactory.getinstance().queryProvince(String.valueOf(longitude),String.valueOf(latitude));
-                        String prov="天朝";//DsFactory.getinstance().queryProvince(String.valueOf(longitude),String.valueOf(latitude));
+                        String prov= String.valueOf(longitude).substring(0,3)+"-"+String.valueOf(latitude).substring(0,2);;//DsFactory.getinstance().queryProvince(String.valueOf(longitude),String.valueOf(latitude));
                         sb.append(prov).append(delimiterOut);
                         // sb.append(latitude).append(delimiterOut);
                       //  String county = DsFactory.getinstance().queryCountry(String.valueOf(longitude),String.valueOf(latitude));
-                        String county = "皇城";//DsFactory.getinstance().queryCountry(String.valueOf(longitude),String.valueOf(latitude));
+                        String county =  String.valueOf(longitude).substring(0,4)+"-"+String.valueOf(latitude).substring(0,3);//DsFactory.getinstance().queryCountry(String.valueOf(longitude),String.valueOf(latitude));
                         sb.append(county);
                         //  sb.append(msisdn).append(delimiterOut);
 
