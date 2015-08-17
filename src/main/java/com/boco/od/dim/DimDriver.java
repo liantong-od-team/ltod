@@ -32,28 +32,18 @@ public class DimDriver extends Configured implements Tool {
         System.out.println();
         String inpath = args[0];
         String outpath = args[1];
-        String charset = "";
         Configuration conf=getConf();
         if (args.length > 2) {
             conf.set("join_type",args[2]);
         }
 
         Job job = new Job(getConf());
-        job.getConfiguration().set("charset", charset);
-
         job.setJarByClass(DimDriver.class);
         job.setJobName("DimDriver");
         job.setMapperClass(DimMapper.class);
 
-//        job.setReducerClass(LocationOdReducer3.class);
-
-//        job.setPartitionerClass(FirstPartitioner.class);
-//        job.setGroupingComparatorClass(GroupingComparator.class);
-
         job.setMapOutputKeyClass(NullWritable.class);
         job.setMapOutputValueClass(Text.class);
-//        job.setOutputKeyClass(NullWritable.class);
-//        job.setOutputValueClass(Text.class);
 
         job.setInputFormatClass(TextInputFormat.class);
         job.setOutputFormatClass(TextOutputFormat.class);
@@ -63,13 +53,13 @@ public class DimDriver extends Configured implements Tool {
         return job.waitForCompletion(true) ? 0 : 1;
     }
 
-    // hadoop jar od-assembly-1.0.jar com.boco.od.location.XDriver fy/odin fy/odout gbk
+    // hadoop jar od-assembly-1.0.jar com.boco.od.location.DimDriver fy/odin fy/odout join_type
     public static void main(String[] args) {
-        System.setProperty("hadoop.home.dir", "D:\\Tools\\runtime\\hadoop_home\\hadoop-2.5.2");
+//        System.setProperty("hadoop.home.dir", "D:\\Tools\\runtime\\hadoop_home\\hadoop-2.5.2");
         try {
             if (args.length < 2) {
                 System.out.printf(
-                        "Usage: %s [generic options]<input dir> <output dir>\n",
+                        "Usage: %s [generic options]<input dir> <output dir> [type]\n",
                         DimDriver.class.getSimpleName());
                 ToolRunner.printGenericCommandUsage(System.out);
                 return;

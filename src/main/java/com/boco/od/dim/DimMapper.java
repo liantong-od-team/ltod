@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 public class DimMapper extends Mapper<LongWritable, Text, NullWritable, Text> {
 
     private static Pattern pattern ;
-    private static String charset = "utf-8";
+//    private static String charset = "utf-8";
     private Text tv = new Text();
     private String join_type = "";
 
@@ -36,20 +36,21 @@ public class DimMapper extends Mapper<LongWritable, Text, NullWritable, Text> {
     private String cell_delimiterIn;
     private int cell_columnSize;
     private String country;
-
+    private String province;
     @Override
     protected void setup(Context ctx) {
-        if (ctx.getConfiguration().get("charset") != null && !"".equals(ctx.getConfiguration().get("charset"))) {
-            charset = ctx.getConfiguration().get("charset");
-        }
+//        if (ctx.getConfiguration().get("charset") != null && !"".equals(ctx.getConfiguration().get("charset"))) {
+//            charset = ctx.getConfiguration().get("charset");
+//        }
 
-        System.out.println("charset = " + charset);
+//        System.out.println("charset = " + charset);
 
         this.conf = ctx.getConfiguration();
         Metadata cellMeta = new Metadata(Constants.CELL_PROP_PATH);
         cell_fileName = conf.get("cell_fileName", cellMeta.getValue("fileName"));
         join_type = conf.get("join_type","");
-        cell_delimiterIn = ",";cellMeta.getValue("delimiterIn");
+        //TODO
+        cell_delimiterIn = /*",";*/cellMeta.getValue("delimiterIn");
         cell_columnSize = cellMeta.getIntValue("column.size");
         CELL_INDEX_LAC = cellMeta.getIntValue("LAC");
         CELL_INDEX_CELL_ID = cellMeta.getIntValue("CELL_ID");
@@ -62,11 +63,9 @@ public class DimMapper extends Mapper<LongWritable, Text, NullWritable, Text> {
 
         try {
             GisTool.getInstance().load(GisTool.COUNTRY_FILE_PATH);
-            ctx.getCounter("LOADDATA", "GISDATA_SUCC").increment(1);
-            System.out.println("GISDATA_SUCC");
+            ctx.getCounter("LOAD_FILE", "GISDATA_SUCC").increment(1);
         } catch (Exception ex) {
-            ctx.getCounter("LOADDATA", "GISDATA_ERROR").increment(1);
-            System.out.println("GISDATA_ERROR");
+            ctx.getCounter("LOAD_FILE", "GISDATA_ERROR").increment(1);
         }
 
 
@@ -78,25 +77,27 @@ public class DimMapper extends Mapper<LongWritable, Text, NullWritable, Text> {
         ctx.getCounter(COUNTER.MapperInput).increment(1);
         String[] cols = pattern.split(value.toString(), -1);
 //        System.out.println("cols.length=" + cols.length);
-//        System.out.println("COLSIZE=" + COLSIZE);
+//        System.out.println("cell_columnSize=" + cell_columnSize);
         if (cell_columnSize != cols.length) {
             //记录非法数据
             ctx.getCounter(COUNTER.Illegal).increment(1);
             return;
         }
 
-
-        if ("oracle".equalsIgnoreCase(join_type)) {
-            country = DsFactory.getinstance().queryCountry(cols[CELL_INDEX_LONGITUDE], cols[CELL_INDEX_LATITUDE]);
-            ctx.getCounter("LOADDATA", "GET_ORACLE_GIS").increment(1);
-            System.out.println("GET_ORACLE_GIS");
-        } else {
-            country = GisTool.getInstance().getCountry(cols[CELL_INDEX_LONGITUDE], cols[CELL_INDEX_LATITUDE]);
-            ctx.getCounter("LOADDATA", "GET_LOCAL_GIS").increment(1);
-            System.out.println("GET_LOCAL_GIS");
+        province = cols[CELL_INDEX_PROVINCE];
+        if (province != null && (province.trim().equals("011") || province.trim().equals("013") || province.trim().equals("018"))) {
+            if ("oracle".equalsIgnoreCase(join_type)) {
+                country = DsFactory.getinstance().queryCountry(cols[CELL_INDEX_LONGITUDE], cols[CELL_INDEX_LATITUDE]);
+                ctx.getCounter("LOAD_DATA", "GET_ORACLE_GIS").increment(1);
+            } else {
+                country = GisTool.getInstance().getCountry(cols[CELL_INDEX_LONGITUDE], cols[CELL_INDEX_LATITUDE]);
+                ctx.getCounter("LOAD_DATA", "GET_LOCAL_GIS").increment(1);
+            }
+            ctx.getCounter("DIM_DATA","BELONG_TARGET_PROV").increment(1);
+        }else {
+            ctx.getCounter("DIM_DATA","NOT_BELONG_TARGET_PROV").increment(1);
         }
-        System.out.println(country);
-        tv.set(value.toString().concat(cell_delimiterIn+country));
+        tv.set(value.toString().concat(cell_delimiterIn+country.trim()));
         ctx.write(NullWritable.get(), tv);
         ctx.getCounter(COUNTER.MapperOutput).increment(1);
     }
