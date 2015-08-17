@@ -58,6 +58,7 @@ public class LiveWorkDriver  extends Configured implements Tool {
         Configuration conf=getConf();
 //       conf.set("hadoop.tmp.dir", "D:\\odtest\\tmp\\");
         conf.set("dayNum",args[2]);
+        conf.set("dbflag",args[3]);
 
         Job job = new Job(conf);
         println(conf);
