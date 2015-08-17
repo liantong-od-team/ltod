@@ -5,6 +5,7 @@ import com.boco.od.common.Constants;
 import com.boco.od.common.Metadata;
 import  com.boco.od.utils.DsFactory;
 import com.boco.od.utils.DateUtils;
+import com.boco.od.utils.geo.GisTool;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -145,6 +146,12 @@ public class LiveWorkReducer extends Reducer<LiveWorkPair, LiveWorkRecord, NullW
         int daynum=0;
         int duration=cycle;
         int currentday;
+        try {
+            GisTool.getInstance().load(GisTool.COUNTRY_FILE_PATH);
+           // ctx.getCounter("LOAD_FILE", "GISDATA_SUCC").increment(1);
+        } catch (Exception ex) {
+           // ctx.getCounter("LOAD_FILE", "GISDATA_ERROR").increment(1);
+        }
         if(action_type.equals("WORK"))
         {
             for(int i=0;i<recordlenth;i++)
@@ -195,8 +202,16 @@ public class LiveWorkReducer extends Reducer<LiveWorkPair, LiveWorkRecord, NullW
                     int    strlen1= String.valueOf(latitude).length();
                         sb.append(String.valueOf(latitude).substring(0,Math.min(strlen1,10))).append(delimiterOut);
                         String prov;
-                    if(dbuse==1)
+                        if(dbuse==1)
+                        {
+                            prov = GisTool.getInstance().getProvince(String.valueOf(longitude),String.valueOf(latitude));
+                        }
+
+                else    if(dbuse==2)
                     {
+
+
+
                          prov=DsFactory.getinstance().queryProvince(String.valueOf(longitude),String.valueOf(latitude));
 
                     }
@@ -208,7 +223,13 @@ public class LiveWorkReducer extends Reducer<LiveWorkPair, LiveWorkRecord, NullW
 
                         sb.append(prov).append(delimiterOut);
                         String county;
+
+
                         if(dbuse==1)
+                        {
+                            county = GisTool.getInstance().getCountry(String.valueOf(longitude),String.valueOf(latitude));
+                        }
+                   else     if(dbuse==2)
                         {
                             // sb.append(latitude).append(delimiterOut);
                             county = DsFactory.getinstance().queryCountry(String.valueOf(longitude),String.valueOf(latitude));
@@ -284,6 +305,11 @@ public class LiveWorkReducer extends Reducer<LiveWorkPair, LiveWorkRecord, NullW
                           String prov;
                         if(dbuse==1)
                         {
+                            prov = GisTool.getInstance().getProvince(String.valueOf(longitude), String.valueOf(latitude));
+                        }
+
+                        else    if(dbuse==2)
+                        {
 
                             prov=DsFactory.getinstance().queryProvince(String.valueOf(longitude),String.valueOf(latitude));
                         }
@@ -294,6 +320,10 @@ public class LiveWorkReducer extends Reducer<LiveWorkPair, LiveWorkRecord, NullW
                         // sb.append(latitude).append(delimiterOut);
                         String county;
                         if(dbuse==1)
+                        {
+                            county = GisTool.getInstance().getCountry(String.valueOf(longitude), String.valueOf(latitude));
+                        }
+                        else                  if(dbuse==2)
 
                         {
                           county = DsFactory.getinstance().queryCountry(String.valueOf(longitude),String.valueOf(latitude));
