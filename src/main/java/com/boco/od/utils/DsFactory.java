@@ -179,12 +179,16 @@ public class DsFactory {
     public static void main(String[] args) {
         String lng = "116.372639";
         String lat = "39.924627";
-        System.out.println("res = " + DsFactory.getinstance().queryProvince(lng, lat));
+        /*System.out.println("res = " + DsFactory.getinstance().queryProvince(lng, lat));
         System.out.println("res = " + DsFactory.getinstance().queryCountry(lng, lat));
         for (String s : DsFactory.getinstance().queryAll(lng, lat)) {
             System.out.println(s);
+        }*/
+        long d1 = System.currentTimeMillis();
+        for(int i=0;i<100;i++){
+            DsFactory.getinstance().queryCountry(lng, lat);
         }
-
+        System.out.println("cost = "+(System.currentTimeMillis()-d1));
 
     }
 
