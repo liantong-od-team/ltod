@@ -192,17 +192,17 @@ public class LiveWorkReducer extends Reducer<LiveWorkPair, LiveWorkRecord, NullW
 
                         int strlen=    String.valueOf(longitude).length();
                         sb.append(String.valueOf(longitude).substring(0,Math.min(strlen,11))).append(delimiterOut);
-                        strlen= String.valueOf(latitude).length();
-                        sb.append(String.valueOf(latitude).substring(0,Math.min(strlen,10))).append(delimiterOut);
+                    int    strlen1= String.valueOf(latitude).length();
+                        sb.append(String.valueOf(latitude).substring(0,Math.min(strlen1,10))).append(delimiterOut);
                         String prov;
                     if(dbuse==1)
                     {
                          prov=DsFactory.getinstance().queryProvince(String.valueOf(longitude),String.valueOf(latitude));
-                        // String.valueOf(longitude).substring(0,6)+String.valueOf(latitude).substring(0,3);
+
                     }
                         else
                     {
-                         prov= String.valueOf(longitude).substring(0,3)+"-"+String.valueOf(latitude).substring(0,2);//DsFactory.getinstance().queryProvince(String.valueOf(longitude),String.valueOf(latitude));
+                         prov= String.valueOf(longitude).substring(0,Math.min(strlen,3))+"-"+String.valueOf(latitude).substring(0,Math.min(strlen1,2));//DsFactory.getinstance().queryProvince(String.valueOf(longitude),String.valueOf(latitude));
 
                     }
 
@@ -215,7 +215,7 @@ public class LiveWorkReducer extends Reducer<LiveWorkPair, LiveWorkRecord, NullW
 
                         }
                else
-                      county = String.valueOf(longitude).substring(0,5)+"-"+String.valueOf(latitude).substring(0,4);//DsFactory.getinstance().queryCountry(String.valueOf(longitude),String.valueOf(latitude));
+                      county = String.valueOf(longitude).substring(0,Math.min(strlen,5))+"-"+String.valueOf(latitude).substring(0,Math.min(strlen1,4));//DsFactory.getinstance().queryCountry(String.valueOf(longitude),String.valueOf(latitude));
 
                         sb.append(county);
                         //  sb.append(msisdn).append(delimiterOut);
@@ -279,15 +279,29 @@ public class LiveWorkReducer extends Reducer<LiveWorkPair, LiveWorkRecord, NullW
                         sb.append(action_type).append(delimiterOut);
                         int strlen=    String.valueOf(longitude).length();
                         sb.append(String.valueOf(longitude).substring(0,Math.min(strlen,11))).append(delimiterOut);
-                        strlen= String.valueOf(latitude).length();
-                        sb.append(String.valueOf(latitude).substring(0,Math.min(strlen,10))).append(delimiterOut);
+                        int   strlen1= String.valueOf(latitude).length();
+                        sb.append(String.valueOf(latitude).substring(0,Math.min(strlen1,10))).append(delimiterOut);
+                          String prov;
+                        if(dbuse==1)
+                        {
 
-                   //     String prov=DsFactory.getinstance().queryProvince(String.valueOf(longitude),String.valueOf(latitude));
-                        String prov= String.valueOf(longitude).substring(0,3)+"-"+String.valueOf(latitude).substring(0,2);;//DsFactory.getinstance().queryProvince(String.valueOf(longitude),String.valueOf(latitude));
+                            prov=DsFactory.getinstance().queryProvince(String.valueOf(longitude),String.valueOf(latitude));
+                        }
+
+                    else
+                            prov= String.valueOf(longitude).substring(0,Math.min(strlen,3))+"-"+String.valueOf(latitude).substring(0,Math.min(strlen1,2));;//DsFactory.getinstance().queryProvince(String.valueOf(longitude),String.valueOf(latitude));
                         sb.append(prov).append(delimiterOut);
                         // sb.append(latitude).append(delimiterOut);
-                  //   String county = DsFactory.getinstance().queryCountry(String.valueOf(longitude),String.valueOf(latitude));
-                       String county =  String.valueOf(longitude).substring(0,5)+"-"+String.valueOf(latitude).substring(0,4);//DsFactory.getinstance().queryCountry(String.valueOf(longitude),String.valueOf(latitude));
+                        String county;
+                        if(dbuse==1)
+
+                        {
+                          county = DsFactory.getinstance().queryCountry(String.valueOf(longitude),String.valueOf(latitude));
+
+                        }
+            else
+                            county =  String.valueOf(longitude).substring(0,Math.min(strlen,5))+"-"+String.valueOf(latitude).substring(0,Math.min(strlen1,4));//DsFactory.getinstance().queryCountry(String.valueOf(longitude),String.valueOf(latitude));
+
                         sb.append(county);
                         //  sb.append(msisdn).append(delimiterOut);
 
