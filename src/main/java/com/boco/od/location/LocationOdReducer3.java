@@ -1,6 +1,7 @@
 package com.boco.od.location;
 
 import com.boco.od.common.Util;
+import com.boco.od.utils.DistanceUtils;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -24,6 +25,8 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
     String start_date;
     String end_date;
     String remain_times;
+    String start_lng;
+    String start_lat;
     String start_cell_province;
     String start_cell_city;
     String start_cell_county;
@@ -35,6 +38,9 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
     String lrc_city = "";
 //    String lrc_county = "";
 
+    private double tmpDistance = 0d;
+    private long tmpTimeCost = 0l;
+
     // prev node
     String prevDay = "";
     String prevStart_date = "";
@@ -44,9 +50,11 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
     String prevArea_id = "";
     String prevLrc_province = "";
     String prevLrc_city = "";
+    String prevStart_lng = "";
+    String prevStart_lat = "";
 //    String prevLrc_county = "";
 
-    int[] od_cityColIdx_in_RegionColIdx = {0, 1, 2, 3, 4, 5, 6, 8, 9, 11, 12, 13, 14, 15, 16};
+    int[] od_cityColIdx_in_RegionColIdx = {0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 15, 16, 17, 18};
 
     /**
      * 需要补点数据的时间部分，起始补000000,结束补 235959
@@ -55,8 +63,9 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
     static String day_end_time = "235959";
     private static int level;
     // dto
-    String[] record = new String[17];
+    String[] record = new String[19];
     StringBuffer sb = new StringBuffer();
+
     protected void setup(Context ctx) throws InterruptedException,
             IOException {
         //city=1 region=2
@@ -74,15 +83,17 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
     /**
      * init prev param for per user
      */
-    private void resetEnv4User(){
-         prevDay = "";
-         prevStart_date = "";
-         prevStart_cell_province = "";
-         prevStart_cell_city = "";
-         prevStart_cell_county = "";
-         prevArea_id = "";
-         prevLrc_province = "";
-         prevLrc_city = "";
+    private void resetEnv4User() {
+        prevDay = "";
+        prevStart_date = "";
+        prevStart_cell_province = "";
+        prevStart_cell_city = "";
+        prevStart_cell_county = "";
+        prevArea_id = "";
+        prevLrc_province = "";
+        prevLrc_city = "";
+        prevStart_lng = "";
+        prevStart_lat = "";
     }
 
 
@@ -93,13 +104,15 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
 
         for (Text val : values) {
             // 0-21 strings
-            vArr = pattern.split(val.toString());
+            vArr = pattern.split(val.toString(),-1);
 
             date_day = vArr[0];
             start_date = vArr[1];
             end_date = vArr[2];
             msisdn = vArr[3];
             remain_times = vArr[4];
+            start_lng = vArr[9];
+            start_lat = vArr[10];
             start_cell_province = vArr[13];
             start_cell_city = vArr[14];
             start_cell_county = vArr[15];
@@ -165,20 +178,28 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
         record[1] = prevStart_date; /*开始时间*/
         record[2] = start_date;/*结束时间*/
         record[3] = msisdn;/*用户*/
-        record[4] = String.valueOf(Util.calcTime(record[1], record[2])); /*驻留时长*/
-        record[5] = prevStart_cell_province; /*开始扇区-省*/
-        record[6] = prevStart_cell_city; /*开始扇区-市*/
-        record[7] = prevStart_cell_county; /*开始扇区-区县*/
-        record[8] = start_cell_province; /*截止扇区-省*/
-        record[9] = start_cell_city;  /*截止扇区-市*/
-        record[10] = start_cell_county; /*截止扇区-区县*/
-        record[11] = area_id; /*归属地区号*/
-        record[12] = lrc_province; /*归属地-省*/
-        record[13] = lrc_city; /*归属地-市*/
+        tmpTimeCost = Util.calcTime(record[1], record[2]) / 1000; //结果为秒
+        record[4] = String.valueOf(tmpTimeCost); /*驻留时长*/
+
+        //add 5-距离 ,6-速度
+        tmpDistance = DistanceUtils.getDistance(prevStart_lat, prevStart_lng, start_lat, start_lng);
+        record[5] = String.valueOf(tmpDistance); /*开始-结束 扇区的距离 单位km*/
+        record[6] = String.valueOf(Util.round(tmpDistance / tmpTimeCost * 3600,2)); /*计算速度值*/
+
+        record[7] = prevStart_cell_province; /*开始扇区-省*/
+        record[8] = prevStart_cell_city; /*开始扇区-市*/
+        record[9] = prevStart_cell_county; /*开始扇区-区县*/
+        record[10] = start_cell_province; /*截止扇区-省*/
+        record[11] = start_cell_city;  /*截止扇区-市*/
+        record[12] = start_cell_county; /*截止扇区-区县*/
+        record[13] = area_id; /*归属地区号*/
+        record[14] = lrc_province; /*归属地-省*/
+        record[15] = lrc_city; /*归属地-市*/
 //        record[14] = lrc_county; /*归属地-区县*/
-        record[14] = ""; /*高铁概率*/
-        record[15] = ""; /*高速概率*/
-        record[16] = ""; /*普通公路概率*/
+        record[16] = ""; /*高铁概率*/
+        record[17] = ""; /*高速概率*/
+        record[18] = ""; /*普通公路概率*/
+
 
         try {
             this.writeRecord(desc, record, level, ctx);
@@ -209,26 +230,28 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
                 record[2] = start_date;/*结束时间*/
                 record[3] = msisdn;/*用户*/
                 record[4] = String.valueOf(Util.calcTime(record[1], record[2])); /*驻留时长*/
+                record[5] = "0";
+                record[6] = "0";
                 if ("".equals(prevDay)) {
-                    record[5] = start_cell_province; /*开始扇区-省*/
-                    record[6] = start_cell_city; /*开始扇区-市*/
-                    record[7] = start_cell_county; /*开始扇区-区县*/
+                    record[7] = start_cell_province; /*开始扇区-省*/
+                    record[8] = start_cell_city; /*开始扇区-市*/
+                    record[9] = start_cell_county; /*开始扇区-区县*/
 
                 } else {
-                    record[5] = prevStart_cell_province; /*开始扇区-省*/
-                    record[6] = prevStart_cell_city; /*开始扇区-市*/
-                    record[7] = prevStart_cell_county; /*开始扇区-区县*/
+                    record[7] = prevStart_cell_province; /*开始扇区-省*/
+                    record[8] = prevStart_cell_city; /*开始扇区-市*/
+                    record[9] = prevStart_cell_county; /*开始扇区-区县*/
                 }
-                record[8] = start_cell_province; /*截止扇区-省*/
-                record[9] = start_cell_city;  /*截止扇区-市*/
-                record[10] = start_cell_county; /*截止扇区-区县*/
-                record[11] = area_id; /*归属地区号*/
-                record[12] = lrc_province; /*归属地-省*/
-                record[13] = lrc_city; /*归属地-市*/
+                record[10] = start_cell_province; /*截止扇区-省*/
+                record[11] = start_cell_city;  /*截止扇区-市*/
+                record[12] = start_cell_county; /*截止扇区-区县*/
+                record[13] = area_id; /*归属地区号*/
+                record[14] = lrc_province; /*归属地-省*/
+                record[15] = lrc_city; /*归属地-市*/
 //                record[14] = lrc_county; /*归属地-区县*/
-                record[14] = ""; /*高铁概率*/
-                record[15] = ""; /*高速概率*/
-                record[16] = ""; /*普通公路概率*/
+                record[16] = ""; /*高铁概率*/
+                record[17] = ""; /*高速概率*/
+                record[18] = ""; /*普通公路概率*/
 
                 try {
                     this.writeRecord(desc, record, level, ctx);
@@ -244,19 +267,22 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
                 record[2] = date_day + day_end_time;/*结束时间*/
                 record[3] = msisdn;/*用户*/
                 record[4] = String.valueOf(Util.calcTime(record[1], record[2])); /*驻留时长*/
-                record[5] = start_cell_province; /*开始扇区-省*/
-                record[6] = start_cell_city; /*开始扇区-市*/
-                record[7] = start_cell_county; /*开始扇区-区县*/
-                record[8] = start_cell_province; /*截止扇区-省*/
-                record[9] = start_cell_city;  /*截止扇区-市*/
-                record[10] = start_cell_county; /*截止扇区-区县*/
-                record[11] = area_id; /*归属地区号*/
-                record[12] = lrc_province; /*归属地-省*/
-                record[13] = lrc_city; /*归属地-市*/
+                record[5] = "0";
+                record[6] = "0";
+
+                record[7] = start_cell_province; /*开始扇区-省*/
+                record[8] = start_cell_city; /*开始扇区-市*/
+                record[9] = start_cell_county; /*开始扇区-区县*/
+                record[10] = start_cell_province; /*截止扇区-省*/
+                record[11] = start_cell_city;  /*截止扇区-市*/
+                record[12] = start_cell_county; /*截止扇区-区县*/
+                record[13] = area_id; /*归属地区号*/
+                record[14] = lrc_province; /*归属地-省*/
+                record[15] = lrc_city; /*归属地-市*/
 //                record[14] = lrc_county; /*归属地-区县*/
-                record[14] = ""; /*高铁概率*/
-                record[15] = ""; /*高速概率*/
-                record[16] = ""; /*普通公路概率*/
+                record[16] = ""; /*高铁概率*/
+                record[17] = ""; /*高速概率*/
+                record[18] = ""; /*普通公路概率*/
                 try {
                     this.writeRecord(desc, record, level, ctx);
                 } catch (IOException e) {
@@ -279,19 +305,22 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
                 ;/*结束时间*/
                 record[3] = msisdn;/*用户*/
                 record[4] = String.valueOf(Util.calcTime(record[1], record[2])); /*驻留时长*/
-                record[5] = prevStart_cell_province; /*开始扇区-省*/
-                record[6] = prevStart_cell_city; /*开始扇区-市*/
-                record[7] = prevStart_cell_county; /*开始扇区-区县*/
-                record[8] = prevStart_cell_province; /*截止扇区-省*/
-                record[9] = prevStart_cell_city;  /*截止扇区-市*/
-                record[10] = prevStart_cell_county; /*截止扇区-区县*/
-                record[11] = area_id; /*归属地区号*/
-                record[12] = lrc_province; /*归属地-省*/
-                record[13] = lrc_city; /*归属地-市*/
+                record[5] = "0";
+                record[6] = "0";
+
+                record[7] = prevStart_cell_province; /*开始扇区-省*/
+                record[8] = prevStart_cell_city; /*开始扇区-市*/
+                record[9] = prevStart_cell_county; /*开始扇区-区县*/
+                record[10] = prevStart_cell_province; /*截止扇区-省*/
+                record[11] = prevStart_cell_city;  /*截止扇区-市*/
+                record[12] = prevStart_cell_county; /*截止扇区-区县*/
+                record[13] = area_id; /*归属地区号*/
+                record[14] = lrc_province; /*归属地-省*/
+                record[15] = lrc_city; /*归属地-市*/
 //                record[14] = lrc_county; /*归属地-区县*/
-                record[14] = ""; /*高铁概率*/
-                record[15] = ""; /*高速概率*/
-                record[16] = ""; /*普通公路概率*/
+                record[16] = ""; /*高铁概率*/
+                record[17] = ""; /*高速概率*/
+                record[18] = ""; /*普通公路概率*/
 
                 try {
                     this.writeRecord(desc, record, level, ctx);
@@ -327,6 +356,8 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
             prevArea_id = area_id;
             prevLrc_province = lrc_province;
             prevLrc_city = lrc_city;
+            prevStart_lng = start_lng;
+            prevStart_lat = start_lat;
 //            prevLrc_county = lrc_county;
         }
 

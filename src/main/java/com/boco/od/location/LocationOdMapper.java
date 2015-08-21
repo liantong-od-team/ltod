@@ -38,7 +38,7 @@ public class LocationOdMapper extends Mapper<LongWritable, Text, UserTimePair, T
 
     public void map(LongWritable key, Text value, Context ctx) throws IOException, InterruptedException {
         ctx.getCounter(COUNTER.MapperInput).increment(1);
-        String[] cols = pattern.split(value.toString());
+        String[] cols = pattern.split(value.toString(),-1);
         if (COLSIZE != cols.length) {
             //记录非法数据
             ctx.getCounter(COUNTER.Illegal).increment(1);

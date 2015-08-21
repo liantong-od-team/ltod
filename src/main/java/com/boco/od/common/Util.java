@@ -1,5 +1,6 @@
 package com.boco.od.common;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
@@ -10,6 +11,12 @@ public class Util {
     private static SimpleDateFormat drd = new SimpleDateFormat("yyyyMMdd");
     private static SimpleDateFormat drh = new SimpleDateFormat("yyyyMMddHH");
     private static SimpleDateFormat drs = new SimpleDateFormat("yyyyMMddHHmmss");
+
+
+    public static double round(double in,int precision){
+        BigDecimal d = new BigDecimal(in);
+        return d.setScale(precision, BigDecimal.ROUND_HALF_EVEN).doubleValue();
+    }
 
     public static long ParseDatebysec(String date) {
         try {
