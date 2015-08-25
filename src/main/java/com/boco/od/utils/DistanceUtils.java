@@ -1,5 +1,7 @@
 package com.boco.od.utils;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.math.BigDecimal;
 
 /**
@@ -46,6 +48,10 @@ public class DistanceUtils {
      */
     public static double getDistance(String slat1, String slng1, String slat2, String slng2)
     {
+        if(StringUtils.isEmpty(slat1)||StringUtils.isEmpty(slng1)||StringUtils.isEmpty(slat2)||StringUtils.isEmpty(slng2))
+        {
+            return 0d;
+        }
         double lng1 = Double.valueOf(slng1);
         double lat1 = Double.valueOf(slat1);
         double lng2 = Double.valueOf(slng2);
