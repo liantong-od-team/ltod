@@ -104,7 +104,7 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
 
         for (Text val : values) {
             // 0-21 strings
-            vArr = pattern.split(val.toString(),-1);
+            vArr = pattern.split(val.toString(), -1);
 
             date_day = vArr[0];
             start_date = vArr[1];
@@ -182,9 +182,13 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
         record[4] = String.valueOf(tmpTimeCost); /*驻留时长*/
 
         //add 5-距离 ,6-速度
-        tmpDistance = DistanceUtils.getDistance(prevStart_lat, prevStart_lng, start_lat, start_lng);
+        tmpDistance = DistanceUtils.getDistance(prevStart_lat.trim(), prevStart_lng.trim(), start_lat.trim(), start_lng.trim());
         record[5] = String.valueOf(tmpDistance); /*开始-结束 扇区的距离 单位km*/
-        record[6] = String.valueOf(Util.round(tmpDistance / tmpTimeCost * 3600,2)); /*计算速度值*/
+        if (tmpTimeCost != 0) {
+            record[6] = String.valueOf(Util.round(tmpDistance * 3600 / tmpTimeCost, 2)); /*计算速度值*/
+        } else {
+            record[6] ="0";
+        }
 
         record[7] = prevStart_cell_province; /*开始扇区-省*/
         record[8] = prevStart_cell_city; /*开始扇区-市*/
@@ -314,6 +318,7 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
                 record[10] = prevStart_cell_province; /*截止扇区-省*/
                 record[11] = prevStart_cell_city;  /*截止扇区-市*/
                 record[12] = prevStart_cell_county; /*截止扇区-区县*/
+
                 record[13] = area_id; /*归属地区号*/
                 record[14] = lrc_province; /*归属地-省*/
                 record[15] = lrc_city; /*归属地-市*/

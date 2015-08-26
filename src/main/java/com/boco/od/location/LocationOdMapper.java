@@ -40,6 +40,7 @@ public class LocationOdMapper extends Mapper<LongWritable, Text, UserTimePair, T
         ctx.getCounter(COUNTER.MapperInput).increment(1);
         String[] cols = pattern.split(value.toString(),-1);
         if (COLSIZE != cols.length) {
+            System.out.println("COLSIZE="+COLSIZE+" | real length="+cols.length);
             //记录非法数据
             ctx.getCounter(COUNTER.Illegal).increment(1);
             return;

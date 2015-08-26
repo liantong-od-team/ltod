@@ -1,6 +1,6 @@
 package com.boco.od.utils;
 
-import org.apache.commons.lang3.StringUtils;
+import com.boco.od.common.Util;
 
 import java.math.BigDecimal;
 
@@ -48,10 +48,13 @@ public class DistanceUtils {
      */
     public static double getDistance(String slat1, String slng1, String slat2, String slng2)
     {
-        if(StringUtils.isEmpty(slat1)||StringUtils.isEmpty(slng1)||StringUtils.isEmpty(slat2)||StringUtils.isEmpty(slng2))
+//        if(StringUtils.isEmpty(slat1)||StringUtils.isEmpty(slng1)||StringUtils.isEmpty(slat2)||StringUtils.isEmpty(slng2))
+        if(null==slat1||"".equals(slat1)||null==slng1||"".equals(slng1)||null==slat2||"".equals(slat2)||null==slng2||"".equals(slng2))
         {
+            System.out.println("jingweidu is empty!!!");
             return 0d;
         }
+        System.out.println("jingweidu is ok!!!");
         double lng1 = Double.valueOf(slng1);
         double lat1 = Double.valueOf(slat1);
         double lng2 = Double.valueOf(slng2);
@@ -74,7 +77,10 @@ public class DistanceUtils {
 
     public static void main(String[] args) {
 //        System.out.println(DistanceUtils.calcDistance("116.321265", "39.938416", "116.321211", "39.941763"));
-        System.out.println(DistanceUtils.getDistance("116.321265", "39.938416", "116.321211", "39.941763"));
+//        System.out.println(DistanceUtils.getDistance("116.321265 ", "39.938416 ", " ", " "));
+
+        System.out.println(Util.round(123124134d * 3600 / 0.000000000000, 2));
+
     }
 
 }
