@@ -35,6 +35,16 @@ public class Util {
         return 0L;
     }
 
+    public static boolean isStayed(String small,String big,int hours) {
+        try {
+            long cha =  drs.parse(big).getTime()-drs.parse(small).getTime();
+            return cha/(1000*60*60) >=hours;
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 
     public static boolean isTheSameDay(String dt1,String dt2){
        return dt1.substring(0,8).equals(dt2.substring(0,8));
@@ -51,13 +61,17 @@ public class Util {
 
     public static void main(String[] args) {
         String dt1 = "20150722021230";
-        String dt2 = "20150722020510";
+        String dt2 = "20150722141229";
 //        System.out.println(isTheSameDay(dt1, dt2));
         System.out.println(dt1.substring(8, 14));
 
 
 //        System.out.println(ParseDatebysec(dt1));
 //        System.out.println(ParseDatebysec(dt2));
+
+        System.out.println(isStayed(dt1,dt2,12));
+
+
     }
 
 }

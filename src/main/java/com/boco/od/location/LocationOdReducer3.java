@@ -120,6 +120,7 @@ public class LocationOdReducer3 extends Reducer<UserTimePair, Text, NullWritable
             end_cell_city = vArr[17];
             end_cell_county = vArr[18];
             area_id = vArr[19];
+
             lrc_province = vArr[20];
             lrc_city = vArr[21];
 //            lrc_county = vArr[22];
