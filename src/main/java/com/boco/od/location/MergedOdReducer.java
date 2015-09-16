@@ -214,7 +214,7 @@ public class MergedOdReducer extends Reducer<UserTimePair, Text, NullWritable, T
     private void genNormalRecord(String desc, Context ctx, int level) {
         //组织写入数据
         record[0] = this.originStart_date;  /*O点的时间*/
-        record[1] = start_date; //prevStart_date; /*D点的时间*/
+        record[1] = prevStart_date; /*D点的时间*/
         record[2] = "" + stayTime;/*停留时间阈值*/
         record[3] = msisdn;/*用户*/
         tmpTimeCost = Util.calcTime(record[0], record[1]) / 1000; //结果为秒
@@ -262,7 +262,7 @@ public class MergedOdReducer extends Reducer<UserTimePair, Text, NullWritable, T
     private void genLastRecord(String desc, Context ctx, int level) {
         //组织写入数据
         record[0] = this.originStart_date;  /*O点的时间*/
-        record[1] = start_date; /*D点的时间*/
+        record[1] = prevStart_date; /*D点的时间*/
         record[2] = "" + stayTime;/*停留时间阈值*/
         record[3] = msisdn;/*用户*/
         tmpTimeCost = Util.calcTime(record[0], record[1]) / 1000; //结果为秒
