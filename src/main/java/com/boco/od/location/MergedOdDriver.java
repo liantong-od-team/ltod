@@ -73,9 +73,9 @@ public class MergedOdDriver extends Configured implements Tool {
         return job.waitForCompletion(true) ? 0 : 1;
     }
 
-// hadoop jar od-assembly-1.0.jar com.boco.od.location.LocationOdDriver fy/odin fy/odout city gbk
+// hadoop jar od-assembly-1.0.jar com.boco.od.location.MergedOdDriver E:/cache/ods E:/cache/ods_mout city gbk 2
     public static void main(String[] args) {
-        System.setProperty("hadoop.home.dir", "D:\\Tools\\runtime\\hadoop_home\\hadoop-2.5.2");
+//        System.setProperty("hadoop.home.dir", "D:\\Tools\\runtime\\hadoop_home\\hadoop-2.5.2");
         try {
             if (args.length < 3) {
                 System.out.printf(
