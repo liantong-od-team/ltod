@@ -79,7 +79,7 @@ public class DistanceUtils {
 //        System.out.println(DistanceUtils.calcDistance("116.321265", "39.938416", "116.321211", "39.941763"));
 //        System.out.println(DistanceUtils.getDistance("116.321265 ", "39.938416 ", " ", " "));
 
-        System.out.println(Util.round(123124134d * 3600 / 0.000000000000, 2));
+        System.out.println(Double.valueOf("N"));
 
     }
 

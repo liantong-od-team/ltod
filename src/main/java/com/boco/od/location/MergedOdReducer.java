@@ -42,6 +42,7 @@ public class MergedOdReducer extends Reducer<UserTimePair, Text, NullWritable, T
 
     // prev node
     String prevStart_date = "";
+    String prevEnd_date = "";
     String prevStart_cell_province = "";
     String prevStart_cell_city = "";
     String prevStart_cell_county = "";
@@ -97,6 +98,7 @@ public class MergedOdReducer extends Reducer<UserTimePair, Text, NullWritable, T
      */
     private void resetEnv4User() {
         prevStart_date = "";
+        prevEnd_date = "";
         prevStart_cell_province = "";
         prevStart_cell_city = "";
         prevStart_cell_county = "";
@@ -121,8 +123,9 @@ public class MergedOdReducer extends Reducer<UserTimePair, Text, NullWritable, T
      * @param level
      */
     private void travals(int level, UserTimePair key, Iterable<Text> values, Context ctx) throws IOException, InterruptedException {
-
+        int len=0;
         for (Text val : values) {
+            len++;
             // 0-21 strings
             vArr = pattern.split(val.toString(), -1);
 
@@ -187,7 +190,8 @@ public class MergedOdReducer extends Reducer<UserTimePair, Text, NullWritable, T
                 }
             }
             //判断为最后一条数据 && 排除掉最后一个点是孤点的情况，即在上一步中根据最后一个点生成了o->prev 的od记录，此时的curr点是最后一个孤立点。
-            if (!values.iterator().hasNext() && !prevStart_date.equals(start_date)) {
+            if (!values.iterator().hasNext() &&len!=1 /*&& !prevStart_date.equals(start_date)*/) {
+
                 /**
                  * 注释掉 将最后一个点加入经过的代码，因为在过程中，已经对它处理过了。
                  * 最后一个点有两种情况，1是与prev区县相同，2是不同。都已经在上一步中，生成od数据或记录了经过点，这里不需要再处理。
@@ -215,6 +219,7 @@ public class MergedOdReducer extends Reducer<UserTimePair, Text, NullWritable, T
         //组织写入数据
         record[0] = this.originStart_date;  /*O点的时间*/
         record[1] = prevStart_date; /*D点的时间*/
+
         record[2] = "" + stayTime;/*停留时间阈值*/
         record[3] = msisdn;/*用户*/
         tmpTimeCost = Util.calcTime(record[0], record[1]) / 1000; //结果为秒
@@ -241,6 +246,9 @@ public class MergedOdReducer extends Reducer<UserTimePair, Text, NullWritable, T
         record[16] = orginFlag + "N";  /*OD记录的属性标记, SN,SE,NN,NE*/
         record[17] = od_line_builder.toString(); /*经过的地区*/
 
+        if("sn".equalsIgnoreCase(orginFlag)){
+            record[1] = prevEnd_date; /*D点的时间*/
+        }
 
         try {
             this.writeRecord(desc, record, level, ctx);
@@ -289,6 +297,9 @@ public class MergedOdReducer extends Reducer<UserTimePair, Text, NullWritable, T
         record[16] = orginFlag + "E";  /*OD记录的属性标记, SN,SE,NN,NE*/
         record[17] = od_line_builder.toString(); /*经过的地区*/
 
+        if("se".equalsIgnoreCase(record[16])){
+            record[1] = this.prevEnd_date;
+        }
 
         try {
             this.writeRecord(desc, record, level, ctx);
@@ -308,6 +319,7 @@ public class MergedOdReducer extends Reducer<UserTimePair, Text, NullWritable, T
         if(type==0){
             prevStart_date = start_date;
         }
+        prevEnd_date = end_date;
         prevStart_cell_province = start_cell_province;
         prevStart_cell_city = start_cell_city;
         prevStart_cell_county = start_cell_county;

@@ -15,6 +15,10 @@ public class LocationBean {
 	// 坐标组
 	private List<List<String>> locations;
 
+	private int location_num;
+
+	private List<String> location_desc;
+
 	// 形成的面的类型 3 or 7
 	private int geoType;
 
@@ -44,6 +48,14 @@ public class LocationBean {
 		this.locations = locations;
 	}
 
+	public List<String> getLocation_desc() {
+		return location_desc;
+	}
+
+	public void setLocation_desc(List<String> location_desc) {
+		this.location_desc = location_desc;
+	}
+
 	public int getGeoType() {
 		return geoType;
 	}
@@ -52,4 +64,11 @@ public class LocationBean {
 		this.geoType = geoType;
 	}
 
+	public int getLocation_num() {
+		return location_num;
+	}
+
+	public void setLocation_num(int location_num) {
+		this.location_num = location_num;
+	}
 }
